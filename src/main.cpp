@@ -2,6 +2,7 @@
 #include <SPI.h>
 #include <midi_Defs.h>
 #include <MIDI.h>
+//#include <PrintStream.h>
 
 // #define DEBUG_USB_HOST
 #include <usbh_midi.h>
@@ -15,6 +16,9 @@
 // Create serial midi interface as MIDI
 MIDI_CREATE_INSTANCE(HardwareSerial, _MIDI_SERIAL_PORT, MIDI);
 
+#define LOBYTE(x) ((char*)(&(x)))[0]
+#define HIBYTE(x) ((char*)(&(x)))[1]
+
 USB Usb;
 USBHub Hub(&Usb);
 USBH_MIDI UsbMidi(&Usb);
@@ -22,6 +26,8 @@ USBH_MIDI UsbMidi(&Usb);
 void pollUsbMidi();
 void pollSerialMidi();
 void doDelay(uint32_t t1, uint32_t t2, uint32_t delayTime);
+byte getstrdescr( byte addr, byte idx );
+void printStringDescriptors(UsbDevice *pdev);
 
 // TODO: sysex handling
 // TODO: USB HUB SUPPORT
@@ -54,6 +60,18 @@ void loop() {
     //} else {
         // Serial.println("Skipped.");
     }
+
+//    if ( Usb.getUsbTaskState() == USB_STATE_RUNNING ) {
+//        Serial.println("Starting descriptor print.");
+//        Usb.ForEachUsbDevice(&printStringDescriptors);
+//
+//        while ( 1 ) { // stop
+//#ifdef ESP8266
+//            yield(); // needed in order to reset the watchdog timer on the ESP8266
+//#endif
+//        }
+//    }
+
     // doDelay(t1, (uint32_t)micros(), 100);
 }
 
@@ -138,4 +156,61 @@ void pollSerialMidi() {
                 break;
         }
     }
+}
+
+void printStringDescriptors(UsbDevice *pdev) {
+    USB_DEVICE_DESCRIPTOR deviceDescriptor;
+    byte rcode;
+    rcode = Usb.getDevDescr( pdev->address.devAddress, 0, 0x12, ( uint8_t *)&deviceDescriptor );
+    if ( rcode ) {
+        Serial.println( rcode, HEX );
+    }
+
+    for (int i = 1; i <= 5; i++) {
+        rcode = getstrdescr( pdev->address.devAddress, i);                 //get string descriptor
+        if( rcode ) {
+            Serial.println( rcode, HEX );
+        }
+    }
+//    while( 1 );                          //stop
+}
+
+byte getstrdescr( byte addr, byte idx ) {
+    uint8_t buf[ 66 ];
+    byte rcode;
+    byte length;
+    byte i;
+    unsigned int langid;
+    rcode = Usb.getStrDescr( addr, 0, 1, 0, 0, buf );  //get language table length
+    if( rcode ) {
+        Serial.println("Error retrieving LangID table length");
+        return( rcode );
+    }
+    length = buf[ 0 ];      //length is the first byte
+    rcode = Usb.getStrDescr( addr, 0, length, 0, 0, buf );  //get language table
+    if( rcode ) {
+        Serial.println("Error retrieving LangID table");
+        return( rcode );
+    }
+    HIBYTE( langid ) = buf[ 3 ];                            //get first langid
+    LOBYTE( langid ) = buf[ 2 ];
+    rcode = Usb.getStrDescr( addr, 0, 1, idx, langid, buf );
+    if( rcode ) {
+        Serial.println("Error retrieving string length");
+        return( rcode );
+    }
+    length = buf[ 0 ];
+    rcode = Usb.getStrDescr( addr, 0, length, idx, langid, buf );
+    if( rcode ) {
+        Serial.println("Error retrieving string");
+        return( rcode );
+    }
+
+//    Serial << "Length: " << length << endl;
+    for( i = 2; i < length; i+=2 ) {
+        Serial.print( (char) buf[ i ] );
+    }
+
+    Serial.print("\n");
+    return( rcode );
 }

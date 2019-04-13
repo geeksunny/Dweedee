@@ -4,3 +4,9 @@
 [submodule "lib/USB_Host_Shield_2.0"]
 	path = lib/USB_Host_Shield_2.0
 	url = git@github.com:felis/USB_Host_Shield_2.0.git
+[submodule "lib/Arduino_PrintStream"]
+	path = lib/Arduino_PrintStream
+	url = https://github.com/tttapa/Arduino-PrintStream.git
+[submodule "lib/etl"]
+	path = lib/etl
+	url = https://github.com/ETLCPP/etl.git

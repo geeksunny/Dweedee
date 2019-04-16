@@ -10,6 +10,3 @@
 [submodule "lib/ArduinoSTL"]
 	path = lib/ArduinoSTL
 	url = https://github.com/mike-matera/ArduinoSTL.git
-[submodule "lib/etl"]
-	path = lib/etl
-	url = https://github.com/ETLCPP/etl.git

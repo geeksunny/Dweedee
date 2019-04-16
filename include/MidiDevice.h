@@ -1,10 +1,10 @@
+#ifndef DWEEDEE_MIDIDEVICE_H
+#define DWEEDEE_MIDIDEVICE_H
+
 //#include <Arduino.h>
 #include <SPI.h>
 #include <Usb.h>
 #include <usbh_midi.h>
-
-#ifndef DWEEDEE_MIDIDEVICE_H
-#define DWEEDEE_MIDIDEVICE_H
 
 
 struct MidiDeviceInfo {

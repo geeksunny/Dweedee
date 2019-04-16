@@ -12,11 +12,13 @@ void checkUsbDevice(UsbDevice *pdev) {
 }
 
 
-Core::Core() {
+Core::Core(USB *Usb) {
     inst = this;
+    this->Usb = Usb;
+    Hub = new USBHub((USB*)Usb);    // TODO: Should this be declared in top-most level?
     Serial.begin(9600);
     Serial.println("Starting USB interface.");
-    if (Usb.Init() == -1) {
+    if (Usb->Init() == -1) {
         Serial.println("USB Host Shield did not start. Halting.");
         while (1); //halt
     }
@@ -26,9 +28,9 @@ Core::Core() {
 }
 
 void Core::task() {
-    Usb.Task();
-    if (Usb.getUsbTaskState() == USB_STATE_RUNNING) {
-        Usb.ForEachUsbDevice(&checkUsbDevice);
+    Usb->Task();
+    if (Usb->getUsbTaskState() == USB_STATE_RUNNING) {
+        Usb->ForEachUsbDevice(&checkUsbDevice);
         if (!this->usbDeviceQueue.empty()) {
             Serial.println("Processing Device Info queue.");
             auto it = usbDeviceQueue.begin();
@@ -59,7 +61,7 @@ MidiDeviceInfo Core::getDeviceInfo(UsbDevice *pdev) {
 
     USB_DEVICE_DESCRIPTOR deviceDescriptor;
     byte rcode;
-    rcode = Usb.getDevDescr(pdev->address.devAddress, 0, 0x12, (uint8_t *)&deviceDescriptor);
+    rcode = Usb->getDevDescr(pdev->address.devAddress, 0, 0x12, (uint8_t *)&deviceDescriptor);
     if (rcode) {
         Serial.print("rcode [device descriptor] :: ");
         Serial.println(rcode, HEX);
@@ -82,32 +84,32 @@ MidiDeviceInfo Core::getDeviceInfo(UsbDevice *pdev) {
     return result;
 }
 
-byte Core::getStringDescriptor(byte usbDevAddr, byte strIndex, char* bufPtr) {
+byte Core::getStringDescriptor(byte usbDevAddr, byte strIndex, char *bufPtr) {
     uint8_t buf[66];
     byte rcode;
     byte length;
     unsigned int langid;
 
-    rcode = Usb.getStrDescr(usbDevAddr, 0, 1, 0, 0, buf);
+    rcode = Usb->getStrDescr(usbDevAddr, 0, 1, 0, 0, buf);
     if (rcode) {
         Serial.println("Error retrieving LangID table length");
         return rcode;
     }
     length = buf[0];
-    rcode = Usb.getStrDescr(usbDevAddr, 0, length, 0, 0, buf);
+    rcode = Usb->getStrDescr(usbDevAddr, 0, length, 0, 0, buf);
     if (rcode) {
         Serial.println("Error retrieving LangID table");
         return rcode;
     }
     HIBYTE(langid) = buf[3];
     LOBYTE(langid) = buf[2];
-    rcode = Usb.getStrDescr(usbDevAddr, 0, 1, strIndex, langid, buf);
+    rcode = Usb->getStrDescr(usbDevAddr, 0, 1, strIndex, langid, buf);
     if (rcode) {
         Serial.println("Error retrieving string length");
         return rcode;
     }
     length = buf[0];
-    rcode = Usb.getStrDescr(usbDevAddr, 0, length, strIndex, langid, buf);
+    rcode = Usb->getStrDescr(usbDevAddr, 0, length, strIndex, langid, buf);
     if (rcode) {
         Serial.println("Error retrieving string");
         return rcode;
@@ -119,6 +121,7 @@ byte Core::getStringDescriptor(byte usbDevAddr, byte strIndex, char* bufPtr) {
     for (i = 2; i < length; i += 2) {
         bufPtr[bufIdx++] = (char) buf[i];
     }
+    bufPtr[bufIdx] = '\0';
 
     return rcode;
 }

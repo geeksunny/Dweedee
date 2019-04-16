@@ -1,11 +1,7 @@
-#include <Arduino.h>
+#ifndef DWEEDEE_CORE_H
+#define DWEEDEE_CORE_H
 
-#ifdef max
-#undef max
-#endif
-#ifdef min
-#undef min
-#endif
+#include <Arduino.h>
 
 #include <SPI.h>
 #include <Usb.h>
@@ -17,14 +13,11 @@
 
 #include "MidiDevice.h"
 
-#ifndef DWEEDEE_CORE_H
-#define DWEEDEE_CORE_H
-
 
 class Core {
 
-    USB Usb;
-    USBHub Hub = USBHub(&Usb);
+    USB *Usb;
+    USBHub *Hub;
     std::map<uint8_t, bool> usbDeviceMap;
     std::vector<MidiDeviceInfo> usbDeviceQueue;
 
@@ -32,7 +25,7 @@ class Core {
     byte getStringDescriptor(byte usbDevAddr, byte strIndex, char* bufPtr);
 
 public:
-    Core();
+    Core(USB *Usb);
     void task();
     void processUsbDevice(UsbDevice *pdev);
 

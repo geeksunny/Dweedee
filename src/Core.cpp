@@ -12,9 +12,8 @@ void checkUsbDevice(UsbDevice *pdev) {
 }
 
 
-Core::Core(USB *Usb) {
+Core::Core(USB *Usb) : Usb(Usb) {
     inst = this;
-    this->Usb = Usb;
     Hub = new USBHub((USB*)Usb);    // TODO: Should this be declared in top-most level?
     Serial.begin(9600);
     Serial.println("Starting USB interface.");
@@ -69,22 +68,14 @@ MidiDeviceInfo Core::getDeviceInfo(UsbDevice *pdev) {
     result.devAddress = pdev->address.devAddress;
     result.vid = deviceDescriptor.idVendor;
     result.pid = deviceDescriptor.idProduct;
-    rcode = this->getStringDescriptor(pdev->address.devAddress, deviceDescriptor.iManufacturer, result.vendorName);
-    if (rcode) {
-        Serial.print("rcode [vendor name string] :: ");
-        Serial.println(rcode, HEX);
-    }
-    rcode = this->getStringDescriptor(pdev->address.devAddress, deviceDescriptor.iProduct, result.productName);
-    if (rcode) {
-        Serial.print("rcode [product name string] :: ");
-        Serial.println(rcode, HEX);
-    }
+    result.vendorName = this->getStringDescriptor(pdev->address.devAddress, deviceDescriptor.iManufacturer);
+    result.productName = this->getStringDescriptor(pdev->address.devAddress, deviceDescriptor.iProduct);
     // Device serial number at `deviceDescriptor.iSerial`
 
     return result;
 }
 
-byte Core::getStringDescriptor(byte usbDevAddr, byte strIndex, char *bufPtr) {
+char* Core::getStringDescriptor(byte usbDevAddr, byte strIndex) {
     uint8_t buf[66];
     byte rcode;
     byte length;
@@ -92,36 +83,44 @@ byte Core::getStringDescriptor(byte usbDevAddr, byte strIndex, char *bufPtr) {
 
     rcode = Usb->getStrDescr(usbDevAddr, 0, 1, 0, 0, buf);
     if (rcode) {
-        Serial.println("Error retrieving LangID table length");
-        return rcode;
+        Serial.print("Error retrieving LangID table length (rcode ");
+        Serial.print(rcode, HEX);
+        Serial.println(")");
+        return (char *) "Unknown";  // todo: define constant
     }
     length = buf[0];
     rcode = Usb->getStrDescr(usbDevAddr, 0, length, 0, 0, buf);
     if (rcode) {
-        Serial.println("Error retrieving LangID table");
-        return rcode;
+        Serial.print("Error retrieving LangID table (rcode ");
+        Serial.print(rcode, HEX);
+        Serial.println(")");
+        return (char *) "Unknown";  // todo: define constant
     }
     HIBYTE(langid) = buf[3];
     LOBYTE(langid) = buf[2];
     rcode = Usb->getStrDescr(usbDevAddr, 0, 1, strIndex, langid, buf);
     if (rcode) {
-        Serial.println("Error retrieving string length");
-        return rcode;
+        Serial.print("Error retrieving string length (rcode ");
+        Serial.print(rcode, HEX);
+        Serial.println(")");
+        return (char *) "Unknown";  // todo: define constant
     }
     length = buf[0];
     rcode = Usb->getStrDescr(usbDevAddr, 0, length, strIndex, langid, buf);
     if (rcode) {
-        Serial.println("Error retrieving string");
-        return rcode;
+        Serial.print("Error retrieving string (rcode ");
+        Serial.print(rcode, HEX);
+        Serial.println(")");
+        return (char *) "Unknown";  // todo: define constant
     }
 
-    bufPtr = (char *) malloc(((length - 3) / 2) + 1);
+    char *result = (char *) malloc(((length - 3) / 2) + 1);
     byte i;
     int bufIdx = 0;
     for (i = 2; i < length; i += 2) {
-        bufPtr[bufIdx++] = (char) buf[i];
+        result[bufIdx++] = (char) buf[i];
     }
-    bufPtr[bufIdx] = '\0';
+    result[bufIdx] = '\0';
 
-    return rcode;
+    return result;
 }

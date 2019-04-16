@@ -22,10 +22,10 @@ class Core {
     std::vector<MidiDeviceInfo> usbDeviceQueue;
 
     MidiDeviceInfo getDeviceInfo(UsbDevice *pdev);
-    byte getStringDescriptor(byte usbDevAddr, byte strIndex, char* bufPtr);
+    char* getStringDescriptor(byte usbDevAddr, byte strIndex);
 
 public:
-    Core(USB *Usb);
+    explicit Core(USB *Usb);
     void task();
     void processUsbDevice(UsbDevice *pdev);
 

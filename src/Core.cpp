@@ -28,22 +28,21 @@ Core::Core(USB *Usb) : Usb(Usb) {
 
 void Core::task() {
     Usb->Task();
+    resetUsbDevAddrQueue();
     if (Usb->getUsbTaskState() == USB_STATE_RUNNING) {
-        resetUsbDevAddrQueue();
         Usb->ForEachUsbDevice(&checkUsbDevice);
-        if (!usbDeviceQueue.empty()) {
-            Serial.println("Processing Device Info queue.");
-            auto it = usbDeviceQueue.begin();
-            while (it != usbDeviceQueue.end()) {
-                MidiDeviceInfo *info = &usbDeviceMap[(UsbDevAddr) it];
-                Serial << "DISCONNECT EVENT" << endl
-                       << "Device:        "  << info->productName << " | PID: " << info->pid << endl
-                       << "Manufacturer:  "  << info->vendorName  << " | VID: " << info->vid << endl
-                       << "Adding `MidiDeviceInfo` to index." << endl << endl;
+    }
+    if (!usbDeviceQueue.empty()) {
+        auto it = usbDeviceQueue.begin();
+        while (it != usbDeviceQueue.end()) {
+            MidiDeviceInfo *info = &usbDeviceMap[*it];
+            Serial << "DISCONNECT EVENT" << endl
+                   << "Device:        "  << info->productName << " | PID: " << info->pid << endl
+                   << "Manufacturer:  "  << info->vendorName  << " | VID: " << info->vid << endl
+                   << "Removing `MidiDeviceInfo` from index." << endl << endl;
 
-                usbDeviceMap.erase(usbDeviceMap.find((UsbDevAddr) it));
-                it = usbDeviceQueue.erase(it);
-            }
+            usbDeviceMap.erase(usbDeviceMap.find(*it));
+            it = usbDeviceQueue.erase(it);
         }
     }
 }
@@ -66,7 +65,7 @@ void Core::processUsbDevice(UsbDevice *pdev) {
     usbDeviceMap[id] = info;
 
     Serial << "CONNECTION EVENT" << endl
-           << "Device:        "  << info.productName << " | PID: " << info.pid << endl
+           << "Device:        "  << info.productName << " | PID: " << info.pid << endl  // TODO: Format as HEX
            << "Manufacturer:  "  << info.vendorName  << " | VID: " << info.vid << endl
            << "Adding `MidiDeviceInfo` to index." << endl << endl;
 }

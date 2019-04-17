@@ -29,30 +29,46 @@ Core::Core(USB *Usb) : Usb(Usb) {
 void Core::task() {
     Usb->Task();
     if (Usb->getUsbTaskState() == USB_STATE_RUNNING) {
+        resetUsbDevAddrQueue();
         Usb->ForEachUsbDevice(&checkUsbDevice);
-        if (!this->usbDeviceQueue.empty()) {
+        if (!usbDeviceQueue.empty()) {
             Serial.println("Processing Device Info queue.");
             auto it = usbDeviceQueue.begin();
             while (it != usbDeviceQueue.end()) {
-                Serial << "Device:        " << it->productName << " | PID: " << it->pid << endl;
-                Serial << "Manufacturer:  " << it->vendorName << " | VID: " << it->vid << endl << endl;
-                usbDeviceMap[it->devAddress] = true;
+                MidiDeviceInfo *info = &usbDeviceMap[(UsbDevAddr) it];
+                Serial << "DISCONNECT EVENT" << endl
+                       << "Device:        "  << info->productName << " | PID: " << info->pid << endl
+                       << "Manufacturer:  "  << info->vendorName  << " | VID: " << info->vid << endl
+                       << "Adding `MidiDeviceInfo` to index." << endl << endl;
+
+                usbDeviceMap.erase(usbDeviceMap.find((UsbDevAddr) it));
                 it = usbDeviceQueue.erase(it);
             }
         }
     }
 }
 
+void Core::resetUsbDevAddrQueue() {
+    for (auto it = usbDeviceMap.begin(); it != usbDeviceMap.end(); ++it) {
+        usbDeviceQueue.push_back(it->first);
+    }
+}
+
 void Core::processUsbDevice(UsbDevice *pdev) {
-    uint8_t id = pdev->address.devAddress;
-    // TODO : This only considers newly connected devices; Need code to monitor for disconnects.
-    if (usbDeviceMap.count(id) != 0) {
+    UsbDevAddr id = pdev->address.devAddress;
+    if (usbDeviceMap.count(id) == 1) {
+        // The device is already indexed. Remove it from the processing queue.
+        usbDeviceQueue.erase(std::remove(usbDeviceQueue.begin(), usbDeviceQueue.end(), id), usbDeviceQueue.end());
         return;
     }
-    // Parse usb device info from pdev into a MidiDeviceInfo and store in usbDeviceQueue.
+    // Parse usb device info from pdev into a MidiDeviceInfo and index in usbDeviceMap.
     MidiDeviceInfo info = getDeviceInfo(pdev);
-    Serial.println("Adding `MidiDeviceInfo` to queue.");
-    usbDeviceQueue.push_back(info);
+    usbDeviceMap[id] = info;
+
+    Serial << "CONNECTION EVENT" << endl
+           << "Device:        "  << info.productName << " | PID: " << info.pid << endl
+           << "Manufacturer:  "  << info.vendorName  << " | VID: " << info.vid << endl
+           << "Adding `MidiDeviceInfo` to index." << endl << endl;
 }
 
 MidiDeviceInfo Core::getDeviceInfo(UsbDevice *pdev) {

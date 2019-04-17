@@ -14,15 +14,19 @@
 #include "MidiDevice.h"
 
 
+typedef uint8_t UsbDevAddr;
+
+
 class Core {
 
     USB *Usb;
     USBHub *Hub;
-    std::map<uint8_t, bool> usbDeviceMap;
-    std::vector<MidiDeviceInfo> usbDeviceQueue;
+    std::map<UsbDevAddr, MidiDeviceInfo> usbDeviceMap;
+    std::vector<UsbDevAddr> usbDeviceQueue;
 
     MidiDeviceInfo getDeviceInfo(UsbDevice *pdev);
     char* getStringDescriptor(byte usbDevAddr, byte strIndex);
+    void resetUsbDevAddrQueue();
 
 public:
     explicit Core(USB *Usb);

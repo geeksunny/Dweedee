@@ -11,27 +11,38 @@
 #include <vector>
 #include <map>
 
-#include "MidiDevice.h"
+#include "UsbDeviceInfo.h"
 
 
 typedef uint8_t UsbDevAddr;
 
 
-class Core {
+class HotplugManager {
 
     USB *Usb;
     USBHub *Hub;
-    std::map<UsbDevAddr, MidiDeviceInfo> usbDeviceMap;
+    std::map<UsbDevAddr, UsbDeviceInfo> usbDeviceMap;
     std::vector<UsbDevAddr> usbDeviceQueue;
 
-    MidiDeviceInfo getDeviceInfo(UsbDevice *pdev);
+    UsbDeviceInfo getDeviceInfo(UsbDevice *pdev);
     char* getStringDescriptor(byte usbDevAddr, byte strIndex);
     void resetUsbDevAddrQueue();
 
 public:
-    explicit Core(USB *Usb);
+    explicit HotplugManager(USB *Usb);
     void task();
     void processUsbDevice(UsbDevice *pdev);
+
+};
+
+
+class Core {
+
+    HotplugManager *usbMgr;
+
+public:
+    explicit Core(USB *Usb);
+    void task();
 
 };
 

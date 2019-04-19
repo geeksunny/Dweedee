@@ -5,14 +5,14 @@
 #define HIBYTE(x) ((char*)(&(x)))[1]
 
 
-Core* inst;
 
+HotplugManager* inst;
 void checkUsbDevice(UsbDevice *pdev) {
     inst->processUsbDevice(pdev);
 }
 
 
-Core::Core(USB *Usb) : Usb(Usb) {
+HotplugManager::HotplugManager(USB *Usb) : Usb(Usb) {
     inst = this;
     Hub = new USBHub((USB*)Usb);    // TODO: Should this be declared in top-most level?
     Serial.begin(9600);
@@ -26,7 +26,7 @@ Core::Core(USB *Usb) : Usb(Usb) {
     Serial.println("Ready.");
 }
 
-void Core::task() {
+void HotplugManager::task() {
     Usb->Task();
     resetUsbDevAddrQueue();
     if (Usb->getUsbTaskState() == USB_STATE_RUNNING) {
@@ -47,13 +47,13 @@ void Core::task() {
     }
 }
 
-void Core::resetUsbDevAddrQueue() {
+void HotplugManager::resetUsbDevAddrQueue() {
     for (auto it = usbDeviceMap.begin(); it != usbDeviceMap.end(); ++it) {
         usbDeviceQueue.push_back(it->first);
     }
 }
 
-void Core::processUsbDevice(UsbDevice *pdev) {
+void HotplugManager::processUsbDevice(UsbDevice *pdev) {
     UsbDevAddr id = pdev->address.devAddress;
     if (usbDeviceMap.count(id) == 1) {
         // The device is already indexed. Remove it from the processing queue.
@@ -70,7 +70,7 @@ void Core::processUsbDevice(UsbDevice *pdev) {
            << "Adding `MidiDeviceInfo` to index." << endl << endl;
 }
 
-MidiDeviceInfo Core::getDeviceInfo(UsbDevice *pdev) {
+MidiDeviceInfo HotplugManager::getDeviceInfo(UsbDevice *pdev) {
     MidiDeviceInfo result = MidiDeviceInfo();
 
     USB_DEVICE_DESCRIPTOR deviceDescriptor;
@@ -90,7 +90,7 @@ MidiDeviceInfo Core::getDeviceInfo(UsbDevice *pdev) {
     return result;
 }
 
-char* Core::getStringDescriptor(byte usbDevAddr, byte strIndex) {
+char* HotplugManager::getStringDescriptor(byte usbDevAddr, byte strIndex) {
     uint8_t buf[66];
     byte rcode;
     byte length;
@@ -138,4 +138,13 @@ char* Core::getStringDescriptor(byte usbDevAddr, byte strIndex) {
     result[bufIdx] = '\0';
 
     return result;
+}
+
+
+Core::Core(USB *Usb) : usbMgr(new HotplugManager(Usb)) {
+    //
+}
+
+void Core::task() {
+    usbMgr->task();
 }

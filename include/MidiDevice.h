@@ -6,14 +6,7 @@
 #include <Usb.h>
 #include <usbh_midi.h>
 
-
-struct MidiDeviceInfo {
-    uint8_t devAddress;
-    uint16_t vid;
-    uint16_t pid;
-    char* vendorName;
-    char* productName;
-};
+#include "UsbDeviceInfo.h"
 
 
 class MidiDevice {
@@ -28,11 +21,11 @@ public:
 class UsbMidiDevice : MidiDevice {
 
     USBH_MIDI *usbMidi;
-    MidiDeviceInfo *deviceInfo;
+    UsbDeviceInfo *deviceInfo;
 
 public:
 
-    UsbMidiDevice(USBH_MIDI &usbMidi, MidiDeviceInfo &deviceInfo);
+    UsbMidiDevice(USBH_MIDI &usbMidi, UsbDeviceInfo &deviceInfo);
     void read() override;
     void write() override;
 

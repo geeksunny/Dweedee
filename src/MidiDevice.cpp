@@ -1,7 +1,7 @@
 #include "MidiDevice.h"
 
 
-UsbMidiDevice::UsbMidiDevice(USBH_MIDI &usbMidi, MidiDeviceInfo &deviceInfo) {
+UsbMidiDevice::UsbMidiDevice(USBH_MIDI &usbMidi, UsbDeviceInfo &deviceInfo) {
     // TODO
 //    this->usbMidi = &usbMidi;
 //    this->deviceInfo = &deviceInfo;

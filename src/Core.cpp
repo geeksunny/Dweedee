@@ -35,11 +35,11 @@ void HotplugManager::task() {
     if (!usbDeviceQueue.empty()) {
         auto it = usbDeviceQueue.begin();
         while (it != usbDeviceQueue.end()) {
-            MidiDeviceInfo *info = &usbDeviceMap[*it];
+            UsbDeviceInfo *info = &usbDeviceMap[*it];
             Serial << "DISCONNECT EVENT" << endl
                    << "Device:        "  << info->productName << " | PID: " << info->pid << endl
                    << "Manufacturer:  "  << info->vendorName  << " | VID: " << info->vid << endl
-                   << "Removing `MidiDeviceInfo` from index." << endl << endl;
+                   << "Removing `UsbDeviceInfo` from index." << endl << endl;
 
             usbDeviceMap.erase(usbDeviceMap.find(*it));
             it = usbDeviceQueue.erase(it);
@@ -60,18 +60,18 @@ void HotplugManager::processUsbDevice(UsbDevice *pdev) {
         usbDeviceQueue.erase(std::remove(usbDeviceQueue.begin(), usbDeviceQueue.end(), id), usbDeviceQueue.end());
         return;
     }
-    // Parse usb device info from pdev into a MidiDeviceInfo and index in usbDeviceMap.
-    MidiDeviceInfo info = getDeviceInfo(pdev);
+    // Parse usb device info from pdev into a UsbDeviceInfo and index in usbDeviceMap.
+    UsbDeviceInfo info = getDeviceInfo(pdev);
     usbDeviceMap[id] = info;
 
     Serial << "CONNECTION EVENT" << endl
            << "Device:        "  << info.productName << " | PID: " << info.pid << endl  // TODO: Format as HEX
            << "Manufacturer:  "  << info.vendorName  << " | VID: " << info.vid << endl
-           << "Adding `MidiDeviceInfo` to index." << endl << endl;
+           << "Adding `UsbDeviceInfo` to index." << endl << endl;
 }
 
-MidiDeviceInfo HotplugManager::getDeviceInfo(UsbDevice *pdev) {
-    MidiDeviceInfo result = MidiDeviceInfo();
+UsbDeviceInfo HotplugManager::getDeviceInfo(UsbDevice *pdev) {
+    UsbDeviceInfo result = UsbDeviceInfo();
 
     USB_DEVICE_DESCRIPTOR deviceDescriptor;
     byte rcode;

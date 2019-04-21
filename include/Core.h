@@ -17,32 +17,44 @@
 typedef uint8_t UsbDevAddr;
 
 
+class HotplugEventHandler {
+
+public:
+    virtual void onDevicesAdded(UsbDeviceInfo added[]) = 0;
+    virtual void onDevicesRemoved(UsbDeviceInfo removed[]) = 0;
+
+};
+
+
 class HotplugManager {
 
     USB *Usb;
     USBHub *Hub;
     std::map<UsbDevAddr, UsbDeviceInfo> usbDeviceMap;
     std::vector<UsbDevAddr> usbDeviceQueue;
+    HotplugEventHandler *eventHandler;
 
     UsbDeviceInfo getDeviceInfo(UsbDevice *pdev);
     char* getStringDescriptor(byte usbDevAddr, byte strIndex);
     void resetUsbDevAddrQueue();
 
 public:
-    explicit HotplugManager(USB *Usb);
+    explicit HotplugManager(USB *Usb, HotplugEventHandler *eventHandler);
     void task();
     void processUsbDevice(UsbDevice *pdev);
 
 };
 
 
-class Core {
+class Core : HotplugEventHandler {
 
     HotplugManager *usbMgr;
 
 public:
     explicit Core(USB *Usb);
     void task();
+    void onDevicesAdded(UsbDeviceInfo added[]) override;
+    void onDevicesRemoved(UsbDeviceInfo removed[]) override;
 
 };
 

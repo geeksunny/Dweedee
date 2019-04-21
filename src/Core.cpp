@@ -12,7 +12,7 @@ void checkUsbDevice(UsbDevice *pdev) {
 }
 
 
-HotplugManager::HotplugManager(USB *Usb) : Usb(Usb) {
+HotplugManager::HotplugManager(USB *Usb, HotplugEventHandler *eventHandler) : Usb(Usb), eventHandler(eventHandler) {
     inst = this;
     Hub = new USBHub((USB*)Usb);    // TODO: Should this be declared in top-most level?
     Serial.begin(9600);
@@ -141,10 +141,18 @@ char* HotplugManager::getStringDescriptor(byte usbDevAddr, byte strIndex) {
 }
 
 
-Core::Core(USB *Usb) : usbMgr(new HotplugManager(Usb)) {
+Core::Core(USB *Usb) : usbMgr(new HotplugManager(Usb, this)) {
     //
 }
 
 void Core::task() {
     usbMgr->task();
+}
+
+void Core::onDevicesAdded(UsbDeviceInfo added[]) {
+    // TODO: Create / enable UsbMidiDevices with contents of added[]
+}
+
+void Core::onDevicesRemoved(UsbDeviceInfo removed[]) {
+    // TODO: Remove / disable UsbMidiDevices matching contents of removed[]
 }

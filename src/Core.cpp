@@ -6,15 +6,16 @@
 
 
 
-HotplugManager* inst;
-void checkUsbDevice(UsbDevice *pdev) {
-    inst->processUsbDevice(pdev);
-}
 
+HotplugManager *HotplugManager::instance;
 
-HotplugManager::HotplugManager(USB *Usb, HotplugEventHandler *eventHandler) : Usb(Usb), eventHandler(eventHandler) {
-    inst = this;
-    Hub = new USBHub((USB*)Usb);    // TODO: Should this be declared in top-most level?
+HotplugManager::HotplugManager(USB *Usb, HotplugEventHandler *eventHandler) : Usb_(Usb), eventHandler_(eventHandler) {
+    if (HotplugManager::instance != nullptr) {
+        // TODO: Throw exception
+    }
+    // TODO: Null checks?
+    HotplugManager::instance = this;
+    Hub_ = new USBHub((USB*)Usb);    // TODO: Should this be declared in top-most level?
     Serial.begin(9600);
     Serial.println("Starting USB interface.");
     if (Usb->Init() == -1) {
@@ -27,42 +28,46 @@ HotplugManager::HotplugManager(USB *Usb, HotplugEventHandler *eventHandler) : Us
 }
 
 void HotplugManager::task() {
-    Usb->Task();
+    Usb_->Task();
     resetUsbDevAddrQueue();
-    if (Usb->getUsbTaskState() == USB_STATE_RUNNING) {
-        Usb->ForEachUsbDevice(&checkUsbDevice);
+    if (Usb_->getUsbTaskState() == USB_STATE_RUNNING) {
+        Usb_->ForEachUsbDevice(&checkUsbDevice);
     }
-    if (!usbDeviceQueue.empty()) {
-        auto it = usbDeviceQueue.begin();
-        while (it != usbDeviceQueue.end()) {
-            UsbDeviceInfo *info = &usbDeviceMap[*it];
+    if (!usbDeviceQueue_.empty()) {
+        auto it = usbDeviceQueue_.begin();
+        while (it != usbDeviceQueue_.end()) {
+            UsbDeviceInfo *info = &usbDeviceMap_[*it];
             Serial << "DISCONNECT EVENT" << endl
                    << "Device:        "  << info->productName << " | PID: " << info->pid << endl
                    << "Manufacturer:  "  << info->vendorName  << " | VID: " << info->vid << endl
                    << "Removing `UsbDeviceInfo` from index." << endl << endl;
 
-            usbDeviceMap.erase(usbDeviceMap.find(*it));
-            it = usbDeviceQueue.erase(it);
+            usbDeviceMap_.erase(usbDeviceMap_.find(*it));
+            it = usbDeviceQueue_.erase(it);
         }
     }
 }
 
 void HotplugManager::resetUsbDevAddrQueue() {
-    for (auto it = usbDeviceMap.begin(); it != usbDeviceMap.end(); ++it) {
-        usbDeviceQueue.push_back(it->first);
+    for (auto it = usbDeviceMap_.begin(); it != usbDeviceMap_.end(); ++it) {
+        usbDeviceQueue_.push_back(it->first);
     }
+}
+
+void HotplugManager::checkUsbDevice(UsbDevice *pdev) {
+    HotplugManager::instance->processUsbDevice(pdev);
 }
 
 void HotplugManager::processUsbDevice(UsbDevice *pdev) {
     UsbDevAddr id = pdev->address.devAddress;
-    if (usbDeviceMap.count(id) == 1) {
+    if (usbDeviceMap_.count(id) == 1) {
         // The device is already indexed. Remove it from the processing queue.
-        usbDeviceQueue.erase(std::remove(usbDeviceQueue.begin(), usbDeviceQueue.end(), id), usbDeviceQueue.end());
+        usbDeviceQueue_.erase(std::remove(usbDeviceQueue_.begin(), usbDeviceQueue_.end(), id), usbDeviceQueue_.end());
         return;
     }
-    // Parse usb device info from pdev into a UsbDeviceInfo and index in usbDeviceMap.
+    // Parse usb device info from pdev into a UsbDeviceInfo and index in usbDeviceMap_.
     UsbDeviceInfo info = getDeviceInfo(pdev);
-    usbDeviceMap[id] = info;
+    usbDeviceMap_[id] = info;
 
     Serial << "CONNECTION EVENT" << endl
            << "Device:        "  << info.productName << " | PID: " << info.pid << endl  // TODO: Format as HEX
@@ -75,7 +80,7 @@ UsbDeviceInfo HotplugManager::getDeviceInfo(UsbDevice *pdev) {
 
     USB_DEVICE_DESCRIPTOR deviceDescriptor;
     byte rcode;
-    rcode = Usb->getDevDescr(pdev->address.devAddress, 0, 0x12, (uint8_t *)&deviceDescriptor);
+    rcode = Usb_->getDevDescr(pdev->address.devAddress, 0, 0x12, (uint8_t *)&deviceDescriptor);
     if (rcode) {
         Serial.print("rcode [device descriptor] :: ");
         Serial.println(rcode, HEX);
@@ -96,7 +101,7 @@ char* HotplugManager::getStringDescriptor(byte usbDevAddr, byte strIndex) {
     byte length;
     unsigned int langid;
 
-    rcode = Usb->getStrDescr(usbDevAddr, 0, 1, 0, 0, buf);
+    rcode = Usb_->getStrDescr(usbDevAddr, 0, 1, 0, 0, buf);
     if (rcode) {
         Serial.print("Error retrieving LangID table length (rcode ");
         Serial.print(rcode, HEX);
@@ -104,7 +109,7 @@ char* HotplugManager::getStringDescriptor(byte usbDevAddr, byte strIndex) {
         return (char *) "Unknown";  // todo: define constant
     }
     length = buf[0];
-    rcode = Usb->getStrDescr(usbDevAddr, 0, length, 0, 0, buf);
+    rcode = Usb_->getStrDescr(usbDevAddr, 0, length, 0, 0, buf);
     if (rcode) {
         Serial.print("Error retrieving LangID table (rcode ");
         Serial.print(rcode, HEX);
@@ -113,7 +118,7 @@ char* HotplugManager::getStringDescriptor(byte usbDevAddr, byte strIndex) {
     }
     HIBYTE(langid) = buf[3];
     LOBYTE(langid) = buf[2];
-    rcode = Usb->getStrDescr(usbDevAddr, 0, 1, strIndex, langid, buf);
+    rcode = Usb_->getStrDescr(usbDevAddr, 0, 1, strIndex, langid, buf);
     if (rcode) {
         Serial.print("Error retrieving string length (rcode ");
         Serial.print(rcode, HEX);
@@ -121,7 +126,7 @@ char* HotplugManager::getStringDescriptor(byte usbDevAddr, byte strIndex) {
         return (char *) "Unknown";  // todo: define constant
     }
     length = buf[0];
-    rcode = Usb->getStrDescr(usbDevAddr, 0, length, strIndex, langid, buf);
+    rcode = Usb_->getStrDescr(usbDevAddr, 0, length, strIndex, langid, buf);
     if (rcode) {
         Serial.print("Error retrieving string (rcode ");
         Serial.print(rcode, HEX);

@@ -20,8 +20,8 @@ public:
 
 class UsbMidiDevice : MidiDevice {
 
-    USBH_MIDI *usbMidi;
-    UsbDeviceInfo *deviceInfo;
+    USBH_MIDI *usbMidi_;
+    UsbDeviceInfo *deviceInfo_;
 
 public:
 
@@ -34,7 +34,7 @@ public:
 
 class SerialMidiDevice : MidiDevice {
 
-    HardwareSerial *serial;
+    HardwareSerial *serial_;
 
 public:
     SerialMidiDevice(HardwareSerial &serial);

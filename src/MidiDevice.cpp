@@ -1,10 +1,8 @@
 #include "MidiDevice.h"
 
 
-UsbMidiDevice::UsbMidiDevice(USBH_MIDI &usbMidi, UsbDeviceInfo &deviceInfo) {
+UsbMidiDevice::UsbMidiDevice(USBH_MIDI &usbMidi, UsbDeviceInfo &deviceInfo) : usbMidi_(&usbMidi), deviceInfo_(&deviceInfo) {
     // TODO
-//    this->usbMidi = &usbMidi;
-//    this->deviceInfo = &deviceInfo;
 }
 
 void UsbMidiDevice::read() {
@@ -16,8 +14,8 @@ void UsbMidiDevice::write() {
 }
 
 
-SerialMidiDevice::SerialMidiDevice(HardwareSerial &serial) {
-    this->serial = &serial;
+SerialMidiDevice::SerialMidiDevice(HardwareSerial &serial) : serial_(&serial) {
+    //
 }
 
 void SerialMidiDevice::read() {

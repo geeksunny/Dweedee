@@ -28,11 +28,15 @@ public:
 
 class HotplugManager {
 
-    USB *Usb;
-    USBHub *Hub;
-    std::map<UsbDevAddr, UsbDeviceInfo> usbDeviceMap;
-    std::vector<UsbDevAddr> usbDeviceQueue;
-    HotplugEventHandler *eventHandler;
+    static HotplugManager *instance;
+    static void checkUsbDevice(UsbDevice *pdev);
+
+    USB *Usb_;
+    USBHub *Hub_;
+    unsigned short int devicesAdded_ = 0;
+    std::map<UsbDevAddr, UsbDeviceInfo> usbDeviceMap_;
+    std::vector<UsbDevAddr> usbDeviceQueue_;
+    HotplugEventHandler *eventHandler_;
 
     UsbDeviceInfo getDeviceInfo(UsbDevice *pdev);
     char* getStringDescriptor(byte usbDevAddr, byte strIndex);

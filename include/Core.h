@@ -8,8 +8,7 @@
 #include <usbhub.h>
 
 #include <ArduinoSTL.h>
-#include <vector>
-#include <map>
+#include <deque>
 
 #include "UsbDeviceInfo.h"
 
@@ -34,13 +33,14 @@ class HotplugManager {
     USB *Usb_;
     USBHub *Hub_;
     unsigned short int devicesAdded_ = 0;
-    std::map<UsbDevAddr, UsbDeviceInfo> usbDeviceMap_;
-    std::vector<UsbDevAddr> usbDeviceQueue_;
+    std::deque<UsbDeviceInfo*> usbDeviceIndex_;
+    std::deque<UsbDeviceInfo*> usbDeviceQueue_;
     HotplugEventHandler *eventHandler_;
 
-    UsbDeviceInfo getDeviceInfo(UsbDevice *pdev);
+    UsbDeviceInfo* getDeviceInfo(UsbDevice *pdev);
     char* getStringDescriptor(byte usbDevAddr, byte strIndex);
     void resetUsbDevAddrQueue();
+    std::deque<UsbDeviceInfo*>::deque_iter findDevInfo(std::deque<UsbDeviceInfo*> *deque, uint8_t usbDevAddr);
 
 public:
     explicit HotplugManager(USB *Usb, HotplugEventHandler *eventHandler);

@@ -8,6 +8,14 @@ struct UsbDeviceInfo {
     uint16_t pid;
     char* vendorName;
     char* productName;
+
+    bool operator==(const unsigned char &rhs) const {
+        return devAddress == rhs;
+    }
+
+    bool operator!=(const unsigned char &rhs) const {
+        return devAddress != rhs;
+    }
 };
 
 

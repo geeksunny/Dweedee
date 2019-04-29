@@ -27,6 +27,19 @@ HotplugManager::HotplugManager(USB *Usb, HotplugEventHandler *eventHandler) : Us
     Serial.println("Ready.");
 }
 
+std::deque<UsbDeviceInfo*>::deque_iter HotplugManager::findDevInfo(
+        std::deque<UsbDeviceInfo*> *deque,
+        uint8_t usbDevAddr) {
+
+    auto it = deque->begin();
+    while (it != deque->end()) {
+        if ((*it)->devAddress == usbDevAddr) {
+            break;
+        }
+    }
+    return it;
+}
+
 void HotplugManager::task() {
     Usb_->Task();
     resetUsbDevAddrQueue();
@@ -36,21 +49,30 @@ void HotplugManager::task() {
     if (!usbDeviceQueue_.empty()) {
         auto it = usbDeviceQueue_.begin();
         while (it != usbDeviceQueue_.end()) {
-            UsbDeviceInfo *info = &usbDeviceMap_[*it];
+            // TODO: Build arrays of added[] and removed[] for eventHandler callbacks
+
             Serial << "DISCONNECT EVENT" << endl
-                   << "Device:        "  << info->productName << " | PID: " << info->pid << endl
-                   << "Manufacturer:  "  << info->vendorName  << " | VID: " << info->vid << endl
+                   << "Device:        "  << (*it)->productName << " | PID: " << (*it)->pid << endl
+                   << "Manufacturer:  "  << (*it)->vendorName  << " | VID: " << (*it)->vid << endl
                    << "Removing `UsbDeviceInfo` from index." << endl << endl;
 
-            usbDeviceMap_.erase(usbDeviceMap_.find(*it));
+            auto iit = findDevInfo(&usbDeviceIndex_, (*it)->devAddress);
+            if (iit != usbDeviceIndex_.end()) {
+                // TODO: ITEM WAS ALREADY INDEXED!! (Disconnect event... right?)
+//                usbDeviceIndex_.erase(usbDeviceIndex_.find(it->devAddress));
+            } else {
+                // TODO: ITEM WAS NOT INDEXED, FRESH CONNECTION (New connection event)
+            }
+
             it = usbDeviceQueue_.erase(it);
         }
     }
 }
 
 void HotplugManager::resetUsbDevAddrQueue() {
-    for (auto it = usbDeviceMap_.begin(); it != usbDeviceMap_.end(); ++it) {
-        usbDeviceQueue_.push_back(it->first);
+    devicesAdded_ = 0;
+    for (auto it = usbDeviceIndex_.begin(); it != usbDeviceIndex_.end(); ++it) {
+        usbDeviceQueue_.push_back(*it);
     }
 }
 
@@ -60,23 +82,26 @@ void HotplugManager::checkUsbDevice(UsbDevice *pdev) {
 
 void HotplugManager::processUsbDevice(UsbDevice *pdev) {
     UsbDevAddr id = pdev->address.devAddress;
-    if (usbDeviceMap_.count(id) == 1) {
+    auto it = findDevInfo(&usbDeviceQueue_, id);
+    if (it != usbDeviceIndex_.end()) {
         // The device is already indexed. Remove it from the processing queue.
-        usbDeviceQueue_.erase(std::remove(usbDeviceQueue_.begin(), usbDeviceQueue_.end(), id), usbDeviceQueue_.end());
+        usbDeviceQueue_.erase(it);
         return;
     }
-    // Parse usb device info from pdev into a UsbDeviceInfo and index in usbDeviceMap_.
-    UsbDeviceInfo info = getDeviceInfo(pdev);
-    usbDeviceMap_[id] = info;
+    // Parse usb device info from pdev into a UsbDeviceInfo and index in usbDeviceIndex_.
+    UsbDeviceInfo *info = getDeviceInfo(pdev);
+    usbDeviceQueue_.push_back(info);
+    // TODO: add info to usbDeviceQueue; (move map indexing to eventHandler??)
+    devicesAdded_++;
 
     Serial << "CONNECTION EVENT" << endl
-           << "Device:        "  << info.productName << " | PID: " << info.pid << endl  // TODO: Format as HEX
-           << "Manufacturer:  "  << info.vendorName  << " | VID: " << info.vid << endl
+           << "Device:        "  << info->productName << " | PID: " << info->pid << endl  // TODO: Format as HEX
+           << "Manufacturer:  "  << info->vendorName  << " | VID: " << info->vid << endl
            << "Adding `UsbDeviceInfo` to index." << endl << endl;
 }
 
-UsbDeviceInfo HotplugManager::getDeviceInfo(UsbDevice *pdev) {
-    UsbDeviceInfo result = UsbDeviceInfo();
+UsbDeviceInfo* HotplugManager::getDeviceInfo(UsbDevice *pdev) {
+    auto *result = new UsbDeviceInfo();
 
     USB_DEVICE_DESCRIPTOR deviceDescriptor;
     byte rcode;
@@ -85,11 +110,11 @@ UsbDeviceInfo HotplugManager::getDeviceInfo(UsbDevice *pdev) {
         Serial.print("rcode [device descriptor] :: ");
         Serial.println(rcode, HEX);
     }
-    result.devAddress = pdev->address.devAddress;
-    result.vid = deviceDescriptor.idVendor;
-    result.pid = deviceDescriptor.idProduct;
-    result.vendorName = this->getStringDescriptor(pdev->address.devAddress, deviceDescriptor.iManufacturer);
-    result.productName = this->getStringDescriptor(pdev->address.devAddress, deviceDescriptor.iProduct);
+    result->devAddress = pdev->address.devAddress;
+    result->vid = deviceDescriptor.idVendor;
+    result->pid = deviceDescriptor.idProduct;
+    result->vendorName = this->getStringDescriptor(pdev->address.devAddress, deviceDescriptor.iManufacturer);
+    result->productName = this->getStringDescriptor(pdev->address.devAddress, deviceDescriptor.iProduct);
     // Device serial number at `deviceDescriptor.iSerial`
 
     return result;

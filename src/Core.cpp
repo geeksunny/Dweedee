@@ -4,7 +4,9 @@
 #define LOBYTE(x) ((char*)(&(x)))[0]
 #define HIBYTE(x) ((char*)(&(x)))[1]
 
+static const uint8_t ledPin = 13;
 
+bool ledOn = false;
 
 
 HotplugManager *HotplugManager::instance;
@@ -20,7 +22,15 @@ HotplugManager::HotplugManager(USB *Usb, HotplugEventHandler *eventHandler) : Us
     Serial.println("Starting USB interface.");
     if (Usb->Init() == -1) {
         Serial.println("USB Host Shield did not start. Halting.");
-        while (1); //halt
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-noreturn"
+        // TODO: This should be centralized to a utility function somewhere
+        while (true) {
+            ledOn = !ledOn;
+            digitalWrite(ledPin, (ledOn) ? HIGH : LOW);
+            delay(500);
+        }
+#pragma clang diagnostic pop
     }
     Serial.println("Started USB interface.");
     delay(200);

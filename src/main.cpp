@@ -3,11 +3,11 @@
 
 USB Usb;
 
-Core *core;
+dweedee::Core *core;
 
 
 void setup() {
-    core = new Core(&Usb);
+    core = new dweedee::Core(&Usb);
     Serial.println("setup() completed.");
 }
 

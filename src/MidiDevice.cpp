@@ -1,27 +1,31 @@
 #include "MidiDevice.h"
 
 
-UsbMidiDevice::UsbMidiDevice(USBH_MIDI &usbMidi, UsbDeviceInfo &deviceInfo) : usbMidi_(&usbMidi), deviceInfo_(&deviceInfo) {
-    // TODO
-}
+namespace dweedee {
 
-void UsbMidiDevice::read() {
-    //todo
-}
+    UsbMidiDevice::UsbMidiDevice(USBH_MIDI &usbMidi, UsbDeviceInfo &deviceInfo) : usbMidi_(&usbMidi), deviceInfo_(&deviceInfo) {
+        // TODO
+    }
 
-void UsbMidiDevice::write() {
-    //todo
-}
+    void UsbMidiDevice::read() {
+        //todo
+    }
+
+    void UsbMidiDevice::write() {
+        //todo
+    }
 
 
-SerialMidiDevice::SerialMidiDevice(HardwareSerial &serial) : serial_(&serial) {
-    //
-}
+    SerialMidiDevice::SerialMidiDevice(HardwareSerial &serial) : serial_(&serial) {
+        //
+    }
 
-void SerialMidiDevice::read() {
-    //todo
-}
+    void SerialMidiDevice::read() {
+        //todo
+    }
 
-void SerialMidiDevice::write() {
-    //todo
+    void SerialMidiDevice::write() {
+        //todo
+    }
+
 }

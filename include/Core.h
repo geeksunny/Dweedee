@@ -19,8 +19,8 @@ typedef uint8_t UsbDevAddr;
 class HotplugEventHandler {
 
 public:
-    virtual void onDevicesAdded(UsbDeviceInfo added[]) = 0;
-    virtual void onDevicesRemoved(UsbDeviceInfo removed[]) = 0;
+    virtual void onDevicesAdded(UsbDeviceInfo *added[], short count) = 0;
+    virtual void onDevicesRemoved(UsbDeviceInfo *removed[], short count) = 0;
 
 };
 
@@ -57,8 +57,8 @@ class Core : HotplugEventHandler {
 public:
     explicit Core(USB *Usb);
     void task();
-    void onDevicesAdded(UsbDeviceInfo added[]) override;
-    void onDevicesRemoved(UsbDeviceInfo removed[]) override;
+    void onDevicesAdded(UsbDeviceInfo *added[], short count) override;
+    void onDevicesRemoved(UsbDeviceInfo *removed[], short count) override;
 
 };
 

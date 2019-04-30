@@ -47,24 +47,36 @@ void HotplugManager::task() {
         Usb_->ForEachUsbDevice(&checkUsbDevice);
     }
     if (!usbDeviceQueue_.empty()) {
+        UsbDeviceInfo *added[devicesAdded_];
+        UsbDeviceInfo *removed[usbDeviceQueue_.size() - devicesAdded_];
+        short addIdx = 0;
+        short remIdx = 0;
+
         auto it = usbDeviceQueue_.begin();
         while (it != usbDeviceQueue_.end()) {
-            // TODO: Build arrays of added[] and removed[] for eventHandler callbacks
-
-            Serial << "DISCONNECT EVENT" << endl
-                   << "Device:        "  << (*it)->productName << " | PID: " << (*it)->pid << endl
-                   << "Manufacturer:  "  << (*it)->vendorName  << " | VID: " << (*it)->vid << endl
-                   << "Removing `UsbDeviceInfo` from index." << endl << endl;
-
             auto iit = findDevInfo(&usbDeviceIndex_, (*it)->devAddress);
             if (iit != usbDeviceIndex_.end()) {
-                // TODO: ITEM WAS ALREADY INDEXED!! (Disconnect event... right?)
-//                usbDeviceIndex_.erase(usbDeviceIndex_.find(it->devAddress));
+                // Device disconnection event
+                removed[remIdx++] = *iit;
+                usbDeviceIndex_.erase(findDevInfo(&usbDeviceIndex_, (*it)->devAddress));
             } else {
-                // TODO: ITEM WAS NOT INDEXED, FRESH CONNECTION (New connection event)
+                // Device connection event
+                added[addIdx++] = *iit;
+                usbDeviceIndex_.push_back(*it);
             }
 
             it = usbDeviceQueue_.erase(it);
+        }
+
+        if (addIdx > 0) {
+            if (eventHandler_ != nullptr) {
+                eventHandler_->onDevicesAdded(added, addIdx);
+            }
+        }
+        if (remIdx > 0) {
+            if (eventHandler_ != nullptr) {
+                eventHandler_->onDevicesRemoved(removed, remIdx);
+            }
         }
     }
 }
@@ -91,13 +103,7 @@ void HotplugManager::processUsbDevice(UsbDevice *pdev) {
     // Parse usb device info from pdev into a UsbDeviceInfo and index in usbDeviceIndex_.
     UsbDeviceInfo *info = getDeviceInfo(pdev);
     usbDeviceQueue_.push_back(info);
-    // TODO: add info to usbDeviceQueue; (move map indexing to eventHandler??)
     devicesAdded_++;
-
-    Serial << "CONNECTION EVENT" << endl
-           << "Device:        "  << info->productName << " | PID: " << info->pid << endl  // TODO: Format as HEX
-           << "Manufacturer:  "  << info->vendorName  << " | VID: " << info->vid << endl
-           << "Adding `UsbDeviceInfo` to index." << endl << endl;
 }
 
 UsbDeviceInfo* HotplugManager::getDeviceInfo(UsbDevice *pdev) {
@@ -179,10 +185,22 @@ void Core::task() {
     usbMgr->task();
 }
 
-void Core::onDevicesAdded(UsbDeviceInfo added[]) {
+void Core::onDevicesAdded(UsbDeviceInfo *added[], short count) {
     // TODO: Create / enable UsbMidiDevices with contents of added[]
+    for (short i = 0; i <= count; i++) {
+        Serial << "CONNECTION EVENT" << endl
+               << "Device:        "  << added[i]->productName << " | PID: " << added[i]->pid << endl  // TODO: Format as HEX
+               << "Manufacturer:  "  << added[i]->vendorName  << " | VID: " << added[i]->vid << endl
+               << "Adding `UsbDeviceInfo` to index." << endl << endl;
+    }
 }
 
-void Core::onDevicesRemoved(UsbDeviceInfo removed[]) {
+void Core::onDevicesRemoved(UsbDeviceInfo *removed[], short count) {
     // TODO: Remove / disable UsbMidiDevices matching contents of removed[]
+    for (short i = 0; i <= count; i++) {
+        Serial << "DISCONNECT EVENT" << endl
+               << "Device:        "  << removed[i]->productName << " | PID: " << removed[i]->pid << endl
+               << "Manufacturer:  "  << removed[i]->vendorName  << " | VID: " << removed[i]->vid << endl
+               << "Removing `UsbDeviceInfo` from index." << endl << endl;
+    }
 }

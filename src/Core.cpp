@@ -44,10 +44,11 @@ namespace dweedee {
             uint8_t usbDevAddr) {
 
         auto it = deque->begin();
-        while (it != deque->end()) {
-            if ((*it)->devAddress == usbDevAddr) {
-                break;
-            }
+        while (++it != deque->end()) {
+            // TODO: Revisit logic here. dump values, see whats going on. it should be equal to end() right away with an empty deque... right?
+//            if ((*it)->devAddress == usbDevAddr) {
+//                break;
+//            }
         }
         return it;
     }
@@ -64,8 +65,7 @@ namespace dweedee {
             short addIdx = 0;
             short remIdx = 0;
 
-            auto it = usbDeviceQueue_.begin();
-            while (it != usbDeviceQueue_.end()) {
+            for (auto it = usbDeviceQueue_.begin(); it != usbDeviceQueue_.end(); ++it) {
                 auto iit = findDevInfo(&usbDeviceIndex_, (*it)->devAddress);
                 if (iit != usbDeviceIndex_.end()) {
                     // Device disconnection event
@@ -80,13 +80,11 @@ namespace dweedee {
                 it = usbDeviceQueue_.erase(it);
             }
 
-            if (addIdx > 0) {
-                if (eventHandler_ != nullptr) {
+            if (eventHandler_ != nullptr) {
+                if (addIdx > 0) {
                     eventHandler_->onDevicesAdded(added, addIdx);
                 }
-            }
-            if (remIdx > 0) {
-                if (eventHandler_ != nullptr) {
+                if (remIdx > 0) {
                     eventHandler_->onDevicesRemoved(removed, remIdx);
                 }
             }
@@ -106,10 +104,11 @@ namespace dweedee {
 
     void HotplugManager::processUsbDevice(UsbDevice *pdev) {
         UsbDevAddr id = pdev->address.devAddress;
-        auto it = findDevInfo(&usbDeviceQueue_, id);
+        auto it = findDevInfo(&usbDeviceIndex_, id);
         if (it != usbDeviceIndex_.end()) {
             // The device is already indexed. Remove it from the processing queue.
-            usbDeviceQueue_.erase(it);
+            // TODO: line below needs to find location in queue (RIGHT??)
+//            usbDeviceQueue_.erase(it);
             return;
         }
         // Parse usb device info from pdev into a UsbDeviceInfo and index in usbDeviceIndex_.

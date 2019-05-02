@@ -21,8 +21,8 @@ namespace dweedee {
     class HotplugEventHandler {
 
     public:
-        virtual void onDevicesAdded(UsbDeviceInfo *added[], short count) = 0;
-        virtual void onDevicesRemoved(UsbDeviceInfo *removed[], short count) = 0;
+        virtual void onDevicesAdded(UsbDeviceInfo **added, short count) = 0;
+        virtual void onDevicesRemoved(UsbDeviceInfo **removed, short count) = 0;
 
     };
 
@@ -31,6 +31,7 @@ namespace dweedee {
 
         static HotplugManager *instance;
         static void checkUsbDevice(UsbDevice *pdev);
+        static std::deque<UsbDeviceInfo*>::deque_iter findDevInfo(std::deque<UsbDeviceInfo*> *deque, uint8_t usbDevAddr);
 
         USB *Usb_;
         USBHub *Hub_;
@@ -42,7 +43,6 @@ namespace dweedee {
         UsbDeviceInfo* getDeviceInfo(UsbDevice *pdev);
         char* getStringDescriptor(byte usbDevAddr, byte strIndex);
         void resetUsbDevAddrQueue();
-        std::deque<UsbDeviceInfo*>::deque_iter findDevInfo(std::deque<UsbDeviceInfo*> *deque, uint8_t usbDevAddr);
 
     public:
         explicit HotplugManager(USB *Usb, HotplugEventHandler *eventHandler);
@@ -59,8 +59,8 @@ namespace dweedee {
     public:
         explicit Core(USB *Usb);
         void task();
-        void onDevicesAdded(UsbDeviceInfo *added[], short count) override;
-        void onDevicesRemoved(UsbDeviceInfo *removed[], short count) override;
+        void onDevicesAdded(UsbDeviceInfo **added, short count) override;
+        void onDevicesRemoved(UsbDeviceInfo **removed, short count) override;
 
     };
 

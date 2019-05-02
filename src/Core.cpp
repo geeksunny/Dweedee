@@ -44,11 +44,11 @@ namespace dweedee {
             uint8_t usbDevAddr) {
 
         auto it = deque->begin();
-        while (++it != deque->end()) {
-            // TODO: Revisit logic here. dump values, see whats going on. it should be equal to end() right away with an empty deque... right?
-//            if ((*it)->devAddress == usbDevAddr) {
-//                break;
-//            }
+        while (it < deque->end()) {
+            if ((*it)->devAddress == usbDevAddr) {
+                break;
+            }
+            it++;
         }
         return it;
     }
@@ -60,23 +60,36 @@ namespace dweedee {
             Usb_->ForEachUsbDevice(&checkUsbDevice);
         }
         if (!usbDeviceQueue_.empty()) {
+            // added[]'s size is this->devicesAdded_;
+            int remSize = usbDeviceQueue_.size() - devicesAdded_;
             UsbDeviceInfo *added[devicesAdded_];
-            UsbDeviceInfo *removed[usbDeviceQueue_.size() - devicesAdded_];
+            UsbDeviceInfo *removed[remSize];
             short addIdx = 0;
             short remIdx = 0;
 
-            for (auto it = usbDeviceQueue_.begin(); it != usbDeviceQueue_.end(); ++it) {
-                auto iit = findDevInfo(&usbDeviceIndex_, (*it)->devAddress);
-                if (iit != usbDeviceIndex_.end()) {
+            auto it = usbDeviceQueue_.begin();
+            while (it < usbDeviceQueue_.end()) {
+                auto indexPos = findDevInfo(&usbDeviceIndex_, (*it)->devAddress);
+                if (indexPos < usbDeviceIndex_.end()) {
                     // Device disconnection event
-                    removed[remIdx++] = *iit;
-                    usbDeviceIndex_.erase(findDevInfo(&usbDeviceIndex_, (*it)->devAddress));
+                    if (remIdx < remSize) {
+                        removed[remIdx++] = *it;
+                    } else {
+                        // Tried to set within `removed[]` but index is out of range.
+                        // TODO: Handle error? Should this prevent code past this if/else from running? Halt operation?
+                    }
+                    usbDeviceIndex_.erase(indexPos);
                 } else {
                     // Device connection event
-                    added[addIdx++] = *iit;
-                    usbDeviceIndex_.push_back(*it);
+                    if (addIdx < devicesAdded_) {
+                        added[addIdx++] = *it;
+                        usbDeviceIndex_.push_back(*it);
+                    } else {
+                        // Tried to access `added[]` but index is out of range.
+                        // TODO: Handle error? Should this prevent code past this if/else from running? Halt operation?
+                    }
                 }
-
+                // Move the iterator by erasing the current item
                 it = usbDeviceQueue_.erase(it);
             }
 
@@ -87,6 +100,8 @@ namespace dweedee {
                 if (remIdx > 0) {
                     eventHandler_->onDevicesRemoved(removed, remIdx);
                 }
+            } else {
+                // Event handler is not set.
             }
         }
     }
@@ -107,8 +122,7 @@ namespace dweedee {
         auto it = findDevInfo(&usbDeviceIndex_, id);
         if (it != usbDeviceIndex_.end()) {
             // The device is already indexed. Remove it from the processing queue.
-            // TODO: line below needs to find location in queue (RIGHT??)
-//            usbDeviceQueue_.erase(it);
+            usbDeviceQueue_.erase(findDevInfo(&usbDeviceQueue_, id));
             return;
         }
         // Parse usb device info from pdev into a UsbDeviceInfo and index in usbDeviceIndex_.
@@ -196,9 +210,10 @@ namespace dweedee {
         usbMgr->task();
     }
 
-    void Core::onDevicesAdded(UsbDeviceInfo *added[], short count) {
+    void Core::onDevicesAdded(UsbDeviceInfo **added, short count) {
         // TODO: Create / enable UsbMidiDevices with contents of added[]
-        for (short i = 0; i <= count; i++) {
+        Serial << "!! onDevicesAdded :: Count: " << count << endl << "!!!!!!!!!!!!!" << endl;
+        for (short i = 0; i < count; i++) {
             Serial << "CONNECTION EVENT" << endl
                    << "Device:        "  << added[i]->productName << " | PID: " << added[i]->pid << endl  // TODO: Format as HEX
                    << "Manufacturer:  "  << added[i]->vendorName  << " | VID: " << added[i]->vid << endl
@@ -206,9 +221,10 @@ namespace dweedee {
         }
     }
 
-    void Core::onDevicesRemoved(UsbDeviceInfo *removed[], short count) {
+    void Core::onDevicesRemoved(UsbDeviceInfo **removed, short count) {
         // TODO: Remove / disable UsbMidiDevices matching contents of removed[]
-        for (short i = 0; i <= count; i++) {
+        Serial << "!! onDevicesRemoved :: Count: " << count << endl << "!!!!!!!!!!!!!" << endl;
+        for (short i = 0; i < count; i++) {
             Serial << "DISCONNECT EVENT" << endl
                    << "Device:        "  << removed[i]->productName << " | PID: " << removed[i]->pid << endl
                    << "Manufacturer:  "  << removed[i]->vendorName  << " | VID: " << removed[i]->vid << endl

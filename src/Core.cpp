@@ -1,4 +1,5 @@
 #include "Core.h"
+#include "Utility.h"
 #include <PrintStream.h>    // swap with <ArduinoSTL.h>
 
 #define LOBYTE(x) ((char*)(&(x)))[0]
@@ -24,15 +25,7 @@ namespace dweedee {
         Serial.println("Starting USB interface.");
         if (Usb->Init() == -1) {
             Serial.println("USB Host Shield did not start. Halting.");
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wmissing-noreturn"
-            // TODO: This should be centralized to a utility function somewhere
-            while (true) {
-                ledOn = !ledOn;
-                digitalWrite(ledPin, (ledOn) ? HIGH : LOW);
-                delay(500);
-            }
-#pragma clang diagnostic pop
+            haltBlinking(1000);
         }
         Serial.println("Started USB interface.");
         delay(200);

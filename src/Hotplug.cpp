@@ -34,7 +34,7 @@ namespace dweedee {
 
         auto it = deque->begin();
         while (it < deque->end()) {
-            if ((*it)->devAddress == usbDevAddr) {
+            if ((*it)->bmAddress == usbDevAddr) {
                 break;
             }
             it++;
@@ -58,7 +58,7 @@ namespace dweedee {
 
             auto it = usbDeviceQueue_.begin();
             while (it < usbDeviceQueue_.end()) {
-                auto indexPos = findDevInfo(&usbDeviceIndex_, (*it)->devAddress);
+                auto indexPos = findDevInfo(&usbDeviceIndex_, (*it)->bmAddress);
                 if (indexPos < usbDeviceIndex_.end()) {
                     // Device disconnection event
                     if (remIdx < remSize) {
@@ -109,7 +109,7 @@ namespace dweedee {
     }
 
     void HotplugManager::processUsbDevice(UsbDevice *pdev) {
-        UsbDevAddr id = pdev->address.devAddress;
+        uint8_t id = pdev->address.bmAddress;
         auto it = findDevInfo(&usbDeviceIndex_, id);
         if (it != usbDeviceIndex_.end()) {
             // The device is already indexed. Remove it from the processing queue.
@@ -123,16 +123,24 @@ namespace dweedee {
     }
 
     UsbDeviceInfo* HotplugManager::getDeviceInfo(UsbDevice *pdev) {
-        auto *result = new UsbDeviceInfo();
-
         USB_DEVICE_DESCRIPTOR deviceDescriptor;
         byte rcode;
-        rcode = Usb_->getDevDescr(pdev->address.devAddress, 0, 0x12, (uint8_t *)&deviceDescriptor);
+        rcode = Usb_->getDevDescr(pdev->address.bmAddress, 0, 0x12, (uint8_t *)&deviceDescriptor);
         if (rcode) {
             Serial.print("rcode [device descriptor] :: ");
             Serial.println(rcode, HEX);
         }
-        result->devAddress = pdev->address.devAddress;
+
+        if (deviceDescriptor.bDeviceClass == 0x09) {
+            // * * NEW hub detected! * *
+            Serial << " + + + HUB DETECTED + + + REGISTERING USBHub* + + +" << endl;
+            usbHubs_.push_back(new USBHub(Usb_));
+            Usb_->Task();
+        }
+
+        auto *result = new UsbDeviceInfo();
+
+        result->bmAddress = pdev->address.bmAddress;
         result->vid = deviceDescriptor.idVendor;
         result->pid = deviceDescriptor.idProduct;
         result->vendorName = this->getStringDescriptor(pdev->address.devAddress, deviceDescriptor.iManufacturer);

@@ -7,9 +7,6 @@
 #include "UsbDeviceInfo.h"
 
 
-typedef uint8_t UsbDevAddr;
-
-
 namespace dweedee {
 
 

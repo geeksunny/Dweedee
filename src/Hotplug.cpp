@@ -6,6 +6,8 @@
 #define LOBYTE(x) ((char*)(&(x)))[0]
 #define HIBYTE(x) ((char*)(&(x)))[1]
 
+#define UNKNOWN "Unknown"
+
 
 namespace dweedee {
 
@@ -17,6 +19,7 @@ namespace dweedee {
         }
         // TODO: Null checks on Usb, eventHandler ?
         HotplugManager::instance = this;
+        usbHubs_.push_back(new USBHub(Usb_));
         Serial.begin(9600);
         Serial.println("Starting USB interface.");
         if (Usb->Init() == -1) {
@@ -25,16 +28,16 @@ namespace dweedee {
         }
         Serial.println("Started USB interface.");
         delay(200);
-        Serial.println("Ready.");
+        Serial << "Ready." << endl << uppercase << showbase;
     }
 
     std::deque<UsbDeviceInfo*>::deque_iter HotplugManager::findDevInfo(
             std::deque<UsbDeviceInfo*> *deque,
-            uint8_t usbDevAddr) {
+            uint8_t devAddress) {
 
         auto it = deque->begin();
         while (it < deque->end()) {
-            if ((*it)->bmAddress == usbDevAddr) {
+            if ((*it)->devAddress == devAddress) {
                 break;
             }
             it++;
@@ -58,7 +61,7 @@ namespace dweedee {
 
             auto it = usbDeviceQueue_.begin();
             while (it < usbDeviceQueue_.end()) {
-                auto indexPos = findDevInfo(&usbDeviceIndex_, (*it)->bmAddress);
+                auto indexPos = findDevInfo(&usbDeviceIndex_, (*it)->devAddress);
                 if (indexPos < usbDeviceIndex_.end()) {
                     // Device disconnection event
                     if (remIdx < remSize) {
@@ -109,43 +112,45 @@ namespace dweedee {
     }
 
     void HotplugManager::processUsbDevice(UsbDevice *pdev) {
-        uint8_t id = pdev->address.bmAddress;
-        auto it = findDevInfo(&usbDeviceIndex_, id);
+        auto it = findDevInfo(&usbDeviceIndex_, pdev->address.devAddress);
         if (it != usbDeviceIndex_.end()) {
             // The device is already indexed. Remove it from the processing queue.
-            usbDeviceQueue_.erase(findDevInfo(&usbDeviceQueue_, id));
+            usbDeviceQueue_.erase(findDevInfo(&usbDeviceQueue_, pdev->address.devAddress));
             return;
         }
         // Parse usb device info from pdev into a UsbDeviceInfo and index in usbDeviceIndex_.
-        UsbDeviceInfo *info = getDeviceInfo(pdev);
+        UsbDeviceInfo *info = createDeviceInfo(pdev);
         usbDeviceQueue_.push_back(info);
         devicesAdded_++;
     }
 
-    UsbDeviceInfo* HotplugManager::getDeviceInfo(UsbDevice *pdev) {
+    UsbDeviceInfo* HotplugManager::createDeviceInfo(UsbDevice *pdev) {
         USB_DEVICE_DESCRIPTOR deviceDescriptor;
         byte rcode;
-        rcode = Usb_->getDevDescr(pdev->address.bmAddress, 0, 0x12, (uint8_t *)&deviceDescriptor);
-        if (rcode) {
-            Serial.print("rcode [device descriptor] :: ");
-            Serial.println(rcode, HEX);
-        }
-
-        if (deviceDescriptor.bDeviceClass == 0x09) {
-            // * * NEW hub detected! * *
-            Serial << " + + + HUB DETECTED + + + REGISTERING USBHub* + + +" << endl;
-            usbHubs_.push_back(new USBHub(Usb_));
-            Usb_->Task();
-        }
+        rcode = Usb_->getDevDescr(pdev->address.devAddress, 0, 0x12, (uint8_t *)&deviceDescriptor);
+//        if (rcode) {
+//            Serial << "rcode [device descriptor] :: " << hex << rcode << dec << endl;
+//        }
 
         auto *result = new UsbDeviceInfo();
+        result->devAddress = pdev->address.devAddress;
 
-        result->bmAddress = pdev->address.bmAddress;
-        result->vid = deviceDescriptor.idVendor;
-        result->pid = deviceDescriptor.idProduct;
-        result->vendorName = this->getStringDescriptor(pdev->address.devAddress, deviceDescriptor.iManufacturer);
-        result->productName = this->getStringDescriptor(pdev->address.devAddress, deviceDescriptor.iProduct);
+        if (rcode) {
+            result->vid = 0xdead;
+            result->pid = 0xbeef;
+            result->vendorName = (char *) UNKNOWN;
+            result->productName = (char *) UNKNOWN;
+        } else {
+            result->vid = deviceDescriptor.idVendor;
+            result->pid = deviceDescriptor.idProduct;
+            result->vendorName = this->getStringDescriptor(pdev->address.devAddress, deviceDescriptor.iManufacturer);
+            result->productName = this->getStringDescriptor(pdev->address.devAddress, deviceDescriptor.iProduct);
+        }
         // Device serial number at `deviceDescriptor.iSerial`
+
+        if (deviceDescriptor.bDeviceClass == 0x09) {
+            usbHubs_.push_back(new USBHub(Usb_));
+        }
 
         return result;
     }
@@ -158,35 +163,27 @@ namespace dweedee {
 
         rcode = Usb_->getStrDescr(usbDevAddr, 0, 1, 0, 0, buf);
         if (rcode) {
-            Serial.print("Error retrieving LangID table length (rcode ");
-            Serial.print(rcode, HEX);
-            Serial.println(")");
-            return (char *) "Unknown";  // todo: define constant
+            Serial << "Error retrieving LangID table length ( rcode " << hex << rcode << dec << " ) " << endl;
+            return (char *) UNKNOWN;
         }
         length = buf[0];
         rcode = Usb_->getStrDescr(usbDevAddr, 0, length, 0, 0, buf);
         if (rcode) {
-            Serial.print("Error retrieving LangID table (rcode ");
-            Serial.print(rcode, HEX);
-            Serial.println(")");
-            return (char *) "Unknown";  // todo: define constant
+            Serial << "Error retrieving LangID table ( rcode " << hex << rcode << dec << " ) " << endl;
+            return (char *) UNKNOWN;
         }
         HIBYTE(langid) = buf[3];
         LOBYTE(langid) = buf[2];
         rcode = Usb_->getStrDescr(usbDevAddr, 0, 1, strIndex, langid, buf);
         if (rcode) {
-            Serial.print("Error retrieving string length (rcode ");
-            Serial.print(rcode, HEX);
-            Serial.println(")");
-            return (char *) "Unknown";  // todo: define constant
+            Serial << "Error retrieving string length (rcode " << hex << rcode << dec << ")" << endl;
+            return (char *) UNKNOWN;
         }
         length = buf[0];
         rcode = Usb_->getStrDescr(usbDevAddr, 0, length, strIndex, langid, buf);
         if (rcode) {
-            Serial.print("Error retrieving string (rcode ");
-            Serial.print(rcode, HEX);
-            Serial.println(")");
-            return (char *) "Unknown";  // todo: define constant
+            Serial << "Error retrieving string (rcode " << hex << rcode << dec << ")" << endl;
+            return (char *) UNKNOWN;
         }
 
         char *result = (char *) malloc(((length - 3) / 2) + 1);

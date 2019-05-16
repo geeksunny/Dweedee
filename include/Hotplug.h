@@ -28,7 +28,8 @@ namespace dweedee {
 
         static HotplugManager *instance;
         static void checkUsbDevice(UsbDevice *pdev);
-        static std::deque<UsbDeviceInfo*>::deque_iter findDevInfo(std::deque<UsbDeviceInfo*> *deque, uint8_t usbDevAddr);
+        static std::deque<UsbDeviceInfo*>::deque_iter findDevInfo(
+                std::deque<UsbDeviceInfo*> *deque, uint8_t devAddress);
 
         USB *Usb_;
         unsigned short int devicesAdded_ = 0;
@@ -37,7 +38,7 @@ namespace dweedee {
         std::deque<UsbDeviceInfo*> usbDeviceQueue_;
         HotplugEventHandler *eventHandler_;
 
-        UsbDeviceInfo* getDeviceInfo(UsbDevice *pdev);
+        UsbDeviceInfo* createDeviceInfo(UsbDevice *pdev);
         char* getStringDescriptor(byte usbDevAddr, byte strIndex);
         void resetUsbDevAddrQueue();
 

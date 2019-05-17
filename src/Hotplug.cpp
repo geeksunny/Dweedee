@@ -97,6 +97,13 @@ namespace dweedee {
             } else {
                 // Event handler is not set.
             }
+            // Deleting unplugged UsbDeviceInfo objects.
+            if (remIdx > 0) {
+                for (short i = 0; i < remIdx; i++) {
+                    // TODO: TEST WITH ++i to see if behavior difference!
+                    delete removed[i];
+                }
+            }
         }
     }
 

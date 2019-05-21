@@ -5,6 +5,7 @@
 namespace dweedee {
 
     struct UsbDeviceInfo {
+        uint8_t devClass;
         uint8_t devAddress;
         uint16_t vid;
         uint16_t pid;

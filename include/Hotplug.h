@@ -33,6 +33,7 @@ namespace dweedee {
 
         USB *Usb_;
         unsigned short int devicesAdded_ = 0;
+        unsigned short int hubsActive_ = 0;
         std::deque<USBHub*> usbHubs_;
         std::deque<UsbDeviceInfo*> usbDeviceIndex_;
         std::deque<UsbDeviceInfo*> usbDeviceQueue_;

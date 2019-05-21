@@ -66,6 +66,11 @@ namespace dweedee {
                     // Device disconnection event
                     if (remIdx < remSize) {
                         removed[remIdx++] = *it;
+
+                        if ((*it)->devClass == 0x09) {
+                            --hubsActive_;
+                            // TODO: Can / should we be deleting unneeded USBHub objects? That would be done here.
+                        }
                     } else {
                         // Tried to set within `removed[]` but index is out of range.
                         // TODO: Handle error? Should this prevent code past this if/else from running? Halt operation?
@@ -77,6 +82,14 @@ namespace dweedee {
                     if (addIdx < devicesAdded_) {
                         added[addIdx++] = *it;
                         usbDeviceIndex_.push_back(*it);
+                        // If hub, increment hubActive_ and maybe create new USBHub object.
+                        if ((*it)->devClass == 0x09) {
+                            // Ensure a free USBHub is always available for a potential hub connection.
+                            // usbHubs_.size() should always be hubsActive_+1
+                            if (++hubsActive_ == usbHubs_.size()) {
+                                usbHubs_.push_back(new USBHub(Usb_));
+                            }
+                        }
                     } else {
                         // Tried to access `added[]` but index is out of range.
                         // TODO: Handle error? Should this prevent code past this if/else from running? Halt operation?
@@ -148,16 +161,13 @@ namespace dweedee {
             result->vendorName = (char *) UNKNOWN;
             result->productName = (char *) UNKNOWN;
         } else {
+            result->devClass = deviceDescriptor.bDeviceClass;
             result->vid = deviceDescriptor.idVendor;
             result->pid = deviceDescriptor.idProduct;
             result->vendorName = this->getStringDescriptor(pdev->address.devAddress, deviceDescriptor.iManufacturer);
             result->productName = this->getStringDescriptor(pdev->address.devAddress, deviceDescriptor.iProduct);
         }
         // Device serial number at `deviceDescriptor.iSerial`
-
-        if (deviceDescriptor.bDeviceClass == 0x09) {
-            usbHubs_.push_back(new USBHub(Usb_));
-        }
 
         return result;
     }

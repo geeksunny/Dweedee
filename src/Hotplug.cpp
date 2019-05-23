@@ -67,7 +67,7 @@ namespace dweedee {
                     if (remIdx < remSize) {
                         removed[remIdx++] = *it;
 
-                        if ((*it)->devClass == 0x09) {
+                        if ((*it)->devClass == USB_CLASS_HUB) {
                             --hubsActive_;
                             // TODO: Can / should we be deleting unneeded USBHub objects? That would be done here.
                         }
@@ -83,7 +83,7 @@ namespace dweedee {
                         added[addIdx++] = *it;
                         usbDeviceIndex_.push_back(*it);
                         // If hub, increment hubActive_ and maybe create new USBHub object.
-                        if ((*it)->devClass == 0x09) {
+                        if ((*it)->devClass == USB_CLASS_HUB) {
                             // Ensure a free USBHub is always available for a potential hub connection.
                             // usbHubs_.size() should always be hubsActive_+1
                             if (++hubsActive_ == usbHubs_.size()) {
@@ -212,6 +212,10 @@ namespace dweedee {
         result[bufIdx] = '\0';
 
         return result;
+    }
+
+    USB *HotplugManager::getUsb() const {
+        return Usb_;
     }
 
 }

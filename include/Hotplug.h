@@ -9,7 +9,7 @@
 #include "UsbDeviceInfo.h"
 
 
-#define USB_TYPE_HUB    0x29
+#define USB_CLASS_HUB    0x09
 
 
 namespace dweedee {
@@ -48,6 +48,7 @@ namespace dweedee {
         void task();
         void processUsbDevice(UsbDevice *pdev);
 
+        USB *getUsb() const;
     };
 
 

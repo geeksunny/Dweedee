@@ -9,9 +9,6 @@
 #include "UsbDeviceInfo.h"
 
 
-#define USB_CLASS_HUB    0x09
-
-
 namespace dweedee {
 
 
@@ -42,13 +39,15 @@ namespace dweedee {
         UsbDeviceInfo* createDeviceInfo(UsbDevice *pdev);
         char* getStringDescriptor(byte usbDevAddr, byte strIndex);
         void resetUsbDevAddrQueue();
+        bool isConfigDescriptorUsbMidi(uint8_t devAddr, uint8_t configDescr);
 
     public:
         explicit HotplugManager(USB *Usb, HotplugEventHandler *eventHandler);
         void task();
         void processUsbDevice(UsbDevice *pdev);
-
+        bool isUsbMidi(uint8_t devAddr);
         USB *getUsb() const;
+
     };
 
 

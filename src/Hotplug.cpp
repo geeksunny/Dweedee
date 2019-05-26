@@ -6,7 +6,9 @@
 #define LOBYTE(x) ((char*)(&(x)))[0]
 #define HIBYTE(x) ((char*)(&(x)))[1]
 
-#define UNKNOWN "Unknown"
+#define DESC_BUFF_SIZE                  256
+#define UNKNOWN                         "Unknown"
+#define USB_SUBCLASS_MIDISTREAMING      3
 
 
 namespace dweedee {
@@ -112,8 +114,7 @@ namespace dweedee {
             }
             // Deleting unplugged UsbDeviceInfo objects.
             if (remIdx > 0) {
-                for (short i = 0; i < remIdx; i++) {
-                    // TODO: TEST WITH ++i to see if behavior difference!
+                for (short i = 0; i < remIdx; ++i) {
                     delete removed[i];
                 }
             }
@@ -141,7 +142,7 @@ namespace dweedee {
         // Parse usb device info from pdev into a UsbDeviceInfo and index in usbDeviceIndex_.
         UsbDeviceInfo *info = createDeviceInfo(pdev);
         usbDeviceQueue_.push_back(info);
-        devicesAdded_++;
+        ++devicesAdded_;
     }
 
     UsbDeviceInfo* HotplugManager::createDeviceInfo(UsbDevice *pdev) {
@@ -212,6 +213,66 @@ namespace dweedee {
         result[bufIdx] = '\0';
 
         return result;
+    }
+
+    bool HotplugManager::isUsbMidi(uint8_t devAddr) {
+        // Iterate through descriptors, return true as soon as we find a UsbMidi device descriptor.
+        USB_DEVICE_DESCRIPTOR buf;
+        uint8_t rcode;
+
+        rcode = Usb_->getDevDescr(devAddr, 0, 0x12, (uint8_t *)&buf);
+        if (rcode) {
+            // Can't retrieve a device descriptor
+            return false;
+        }
+
+        for (int i = 0; i < buf.bNumConfigurations; ++i) {
+            if (isConfigDescriptorUsbMidi(devAddr, i)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool HotplugManager::isConfigDescriptorUsbMidi(uint8_t devAddr, uint8_t configDescr) {
+        uint8_t buf[DESC_BUFF_SIZE];
+        uint8_t *buf_ptr = buf;
+        uint8_t rcode;
+        uint8_t descr_length;
+        uint8_t descr_type;
+        uint16_t total_length;
+
+        // get config descr size
+        rcode = Usb_->getConfDescr(devAddr, 0, 4, configDescr, buf);
+        if (rcode) {
+            // No size found
+            return false;
+        }
+        total_length = buf[2] | ((int)buf[3] << 8);
+        if (total_length > DESC_BUFF_SIZE) {    // check if total length is larger than buffer
+            total_length = DESC_BUFF_SIZE;
+        }
+
+        // get whole configuration descriptor
+        rcode = Usb_->getConfDescr(devAddr, 0, total_length, configDescr, buf);
+        if (rcode) {
+            // Invalid response
+            return false;
+        }
+
+        // Parsing descriptors
+        while (buf_ptr < (buf + total_length)) {
+            descr_length = *(buf_ptr);
+            descr_type = *(buf_ptr + 1);
+            if (descr_type == USB_DESCRIPTOR_INTERFACE) {
+                if (buf_ptr[5] == USB_CLASS_AUDIO && buf_ptr[6] == USB_SUBCLASS_MIDISTREAMING) {
+                    return true;
+                }
+            }
+            // Advance buffer pointer
+            buf_ptr += descr_length;
+        }
+        return false;
     }
 
     USB *HotplugManager::getUsb() const {

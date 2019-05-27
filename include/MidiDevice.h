@@ -1,7 +1,6 @@
 #ifndef DWEEDEE_MIDIDEVICE_H
 #define DWEEDEE_MIDIDEVICE_H
 
-//#include <Arduino.h>
 #include <SPI.h>
 #include <Usb.h>
 #include <usbh_midi.h>
@@ -20,7 +19,7 @@ namespace dweedee {
     };
 
 
-    class UsbMidiDevice : MidiDevice {
+    class UsbMidiDevice : public MidiDevice {
 
         USBH_MIDI *usbMidi_;
         UsbDeviceInfo *deviceInfo_;
@@ -34,7 +33,7 @@ namespace dweedee {
     };
 
 
-    class SerialMidiDevice : MidiDevice {
+    class SerialMidiDevice : public MidiDevice {
 
         HardwareSerial *serial_;
 

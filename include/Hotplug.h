@@ -37,7 +37,7 @@ namespace dweedee {
         HotplugEventHandler *eventHandler_;
 
         UsbDeviceInfo* createDeviceInfo(UsbDevice *pdev);
-        char* getStringDescriptor(byte usbDevAddr, byte strIndex);
+        char* getStringDescriptor(uint8_t usbDevAddr, uint8_t strIndex);
         void resetUsbDevAddrQueue();
         bool isConfigDescriptorUsbMidi(uint8_t devAddr, uint8_t configDescr);
 

@@ -147,7 +147,7 @@ namespace dweedee {
 
     UsbDeviceInfo* HotplugManager::createDeviceInfo(UsbDevice *pdev) {
         USB_DEVICE_DESCRIPTOR deviceDescriptor;
-        byte rcode;
+        uint8_t rcode;
         rcode = Usb_->getDevDescr(pdev->address.devAddress, 0, 0x12, (uint8_t *)&deviceDescriptor);
 //        if (rcode) {
 //            Serial << "rcode [device descriptor] :: " << hex << rcode << dec << endl;
@@ -173,10 +173,10 @@ namespace dweedee {
         return result;
     }
 
-    char* HotplugManager::getStringDescriptor(byte usbDevAddr, byte strIndex) {
+    char* HotplugManager::getStringDescriptor(uint8_t usbDevAddr, uint8_t strIndex) {
         uint8_t buf[66];
-        byte rcode;
-        byte length;
+        uint8_t rcode;
+        uint8_t length;
         unsigned int langid;
 
         rcode = Usb_->getStrDescr(usbDevAddr, 0, 1, 0, 0, buf);
@@ -205,7 +205,7 @@ namespace dweedee {
         }
 
         char *result = (char *) malloc(((length - 3) / 2) + 1);
-        byte i;
+        uint8_t i;
         int bufIdx = 0;
         for (i = 2; i < length; i += 2) {
             result[bufIdx++] = (char) buf[i];

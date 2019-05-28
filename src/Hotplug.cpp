@@ -13,6 +13,78 @@
 
 namespace dweedee {
 
+
+    UsbDevicePool::UsbDevicePool(USB *Usb) {
+        // Initial device creation
+        hubPool_.push_back(new USBHub(Usb));
+        midiPool_.push_back(new USBH_MIDI(Usb));
+    }
+
+    /**
+     * Creates a new USBHub object for future use if no inactive objects exist.
+     * @param Usb
+     * @return true if a new USBHub object was created
+     */
+    bool UsbDevicePool::requestUsbHub(USB *Usb) {
+        if ((getActiveUsbHubCount() + 1) >= hubPool_.size()) {
+            hubPool_.push_back(new USBHub(Usb));
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Creates a new USBH_MIDI object for future use if no inactive objects exist.
+     * @param Usb
+     * @return true if a new USBH_MIDI object was created
+     */
+    bool UsbDevicePool::requestUsbMidi(USB *Usb) {
+        if ((getActiveUsbMidiCount() + 1) >= midiPool_.size()) {
+            midiPool_.push_back(new USBH_MIDI(Usb));
+            return true;
+        }
+        return false;
+    }
+
+    USBHub* UsbDevicePool::getUsbHub(uint8_t devAddr) {
+        for (auto it = hubPool_.begin(); it < hubPool_.end(); ++it) {
+            if ((*it)->GetAddress() == devAddr) {
+                return (*it);
+            }
+        }
+        return nullptr;
+    }
+
+    USBH_MIDI* UsbDevicePool::getUsbMidi(uint8_t devAddr) {
+        for (auto it = midiPool_.begin(); it < midiPool_.end(); ++it) {
+            if ((*it)->GetAddress() == devAddr) {
+                return (*it);
+            }
+        }
+        return nullptr;
+    }
+
+    uint8_t UsbDevicePool::getActiveUsbHubCount() {
+        uint8_t active = 0;
+        for (auto it = hubPool_.begin(); it < hubPool_.end(); ++it) {
+            if ((*it)->GetAddress()) {  // if Address is non-zero
+                ++active;
+            }
+        }
+        return active;
+    }
+
+    uint8_t UsbDevicePool::getActiveUsbMidiCount() {
+        uint8_t active = 0;
+        for (auto it = midiPool_.begin(); it < midiPool_.end(); ++it) {
+            if ((*it)->GetAddress()) {  // if Address is non-zero
+                ++active;
+            }
+        }
+        return active;
+    }
+
+
     HotplugManager *HotplugManager::instance;
 
     HotplugManager::HotplugManager(USB *Usb, HotplugEventHandler *eventHandler) : Usb_(Usb), eventHandler_(eventHandler) {
@@ -278,5 +350,6 @@ namespace dweedee {
     USB *HotplugManager::getUsb() const {
         return Usb_;
     }
+
 
 }

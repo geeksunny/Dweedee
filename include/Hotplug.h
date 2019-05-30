@@ -36,8 +36,6 @@ namespace dweedee {
         USBH_MIDI *getUsbMidi(uint8_t devAddr);
         uint8_t getActiveUsbHubCount();
         uint8_t getActiveUsbMidiCount();
-        bool isIndexed(uint8_t devAddr);
-        bool removeFromIndex(uint8_t devAddr);
 
     };
 

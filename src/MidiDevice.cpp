@@ -15,6 +15,10 @@ namespace dweedee {
         //todo
     }
 
+    uint8_t UsbMidiDevice::getAddress() {
+        return deviceInfo_->devAddress;
+    }
+
 
     SerialMidiDevice::SerialMidiDevice(HardwareSerial &serial) : serial_(&serial) {
         //

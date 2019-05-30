@@ -16,6 +16,8 @@ namespace dweedee {
         HotplugManager *usbMgr;
         std::deque<MidiDevice*> midiDevices_;
 
+        MidiDevice *findMidiDevice(uint8_t devAddr);
+
     public:
         explicit Core(USB *Usb);
         void task();

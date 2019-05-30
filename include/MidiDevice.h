@@ -12,9 +12,16 @@ namespace dweedee {
 
     class MidiDevice {
 
+        bool enabled_ = true;
+
     public:
         virtual void read() = 0;
         virtual void write() = 0;
+
+        virtual uint8_t getAddress() { return 0; }
+
+        bool isEnabled() { return enabled_; }
+        void setEnabled(bool enabled) { enabled_ = enabled;}
 
     };
 
@@ -29,6 +36,7 @@ namespace dweedee {
         UsbMidiDevice(USBH_MIDI &usbMidi, UsbDeviceInfo &deviceInfo);
         void read() override;
         void write() override;
+        uint8_t getAddress() override;
 
     };
 

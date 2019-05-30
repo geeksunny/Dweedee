@@ -20,6 +20,12 @@ namespace dweedee {
         midiPool_.push_back(new USBH_MIDI(Usb));
     }
 
+    bool UsbDevicePool::checkAllocation(USB *Usb) {
+        bool resultHub = requestUsbHub(Usb);
+        bool resultMidi = requestUsbMidi(Usb);
+        return resultHub || resultMidi;
+    }
+
     /**
      * Creates a new USBHub object for future use if no inactive objects exist.
      * @param Usb
@@ -86,6 +92,7 @@ namespace dweedee {
 
 
     HotplugManager *HotplugManager::instance;
+    UsbDevicePool *HotplugManager::devicePool;
 
     HotplugManager::HotplugManager(USB *Usb, HotplugEventHandler *eventHandler) : Usb_(Usb), eventHandler_(eventHandler) {
         if (HotplugManager::instance != nullptr) {
@@ -93,13 +100,13 @@ namespace dweedee {
         }
         // TODO: Null checks on Usb, eventHandler ?
         HotplugManager::instance = this;
-        usbHubs_.push_back(new USBHub(Usb_));
         Serial.begin(9600);
         Serial.println("Starting USB interface.");
         if (Usb->Init() == -1) {
             Serial.println("USB Host Shield did not start. Halting.");
             haltBlinking(1000);
         }
+        devicePool = new UsbDevicePool(Usb);
         Serial.println("Started USB interface.");
         delay(200);
         Serial << "Ready." << endl << uppercase << showbase;
@@ -140,11 +147,6 @@ namespace dweedee {
                     // Device disconnection event
                     if (remIdx < remSize) {
                         removed[remIdx++] = *it;
-
-                        if ((*it)->devClass == USB_CLASS_HUB) {
-                            --hubsActive_;
-                            // TODO: Can / should we be deleting unneeded USBHub objects? That would be done here.
-                        }
                     } else {
                         // Tried to set within `removed[]` but index is out of range.
                         // TODO: Handle error? Should this prevent code past this if/else from running? Halt operation?
@@ -156,14 +158,7 @@ namespace dweedee {
                     if (addIdx < devicesAdded_) {
                         added[addIdx++] = *it;
                         usbDeviceIndex_.push_back(*it);
-                        // If hub, increment hubActive_ and maybe create new USBHub object.
-                        if ((*it)->devClass == USB_CLASS_HUB) {
-                            // Ensure a free USBHub is always available for a potential hub connection.
-                            // usbHubs_.size() should always be hubsActive_+1
-                            if (++hubsActive_ == usbHubs_.size()) {
-                                usbHubs_.push_back(new USBHub(Usb_));
-                            }
-                        }
+                        devicePool->checkAllocation(Usb_);
                     } else {
                         // Tried to access `added[]` but index is out of range.
                         // TODO: Handle error? Should this prevent code past this if/else from running? Halt operation?
@@ -234,7 +229,6 @@ namespace dweedee {
             result->vendorName = (char *) UNKNOWN;
             result->productName = (char *) UNKNOWN;
         } else {
-            result->devClass = deviceDescriptor.bDeviceClass;
             result->vid = deviceDescriptor.idVendor;
             result->pid = deviceDescriptor.idProduct;
             result->vendorName = this->getStringDescriptor(pdev->address.devAddress, deviceDescriptor.iManufacturer);
@@ -349,6 +343,10 @@ namespace dweedee {
 
     USB *HotplugManager::getUsb() const {
         return Usb_;
+    }
+
+    UsbDevicePool *HotplugManager::getUsbDevicePool() const {
+        return devicePool;
     }
 
 

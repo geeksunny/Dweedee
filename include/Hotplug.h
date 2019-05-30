@@ -26,15 +26,18 @@ namespace dweedee {
         std::deque<USBHub*> hubPool_;
         std::deque<USBH_MIDI*> midiPool_;
 
-        UsbDevicePool(USB *Usb);
         bool requestUsbHub(USB *Usb);
         bool requestUsbMidi(USB *Usb);
 
     public:
+        UsbDevicePool(USB *Usb);
+        bool checkAllocation(USB *Usb);
         USBHub *getUsbHub(uint8_t devAddr);
         USBH_MIDI *getUsbMidi(uint8_t devAddr);
         uint8_t getActiveUsbHubCount();
         uint8_t getActiveUsbMidiCount();
+        bool isIndexed(uint8_t devAddr);
+        bool removeFromIndex(uint8_t devAddr);
 
     };
 
@@ -42,14 +45,13 @@ namespace dweedee {
     class HotplugManager {
 
         static HotplugManager *instance;
+        static UsbDevicePool *devicePool;
         static void checkUsbDevice(UsbDevice *pdev);
         static std::deque<UsbDeviceInfo*>::deque_iter findDevInfo(
                 std::deque<UsbDeviceInfo*> *deque, uint8_t devAddress);
 
         USB *Usb_;
         unsigned short int devicesAdded_ = 0;
-        unsigned short int hubsActive_ = 0;
-        std::deque<USBHub*> usbHubs_;
         std::deque<UsbDeviceInfo*> usbDeviceIndex_;
         std::deque<UsbDeviceInfo*> usbDeviceQueue_;
         HotplugEventHandler *eventHandler_;
@@ -65,6 +67,7 @@ namespace dweedee {
         void processUsbDevice(UsbDevice *pdev);
         bool isUsbMidi(uint8_t devAddr);
         USB *getUsb() const;
+        UsbDevicePool *getUsbDevicePool() const;
 
     };
 

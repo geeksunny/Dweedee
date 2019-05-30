@@ -32,7 +32,7 @@ namespace dweedee {
      * @return true if a new USBHub object was created
      */
     bool UsbDevicePool::requestUsbHub(USB *Usb) {
-        if ((getActiveUsbHubCount() + 1) >= hubPool_.size()) {
+        if (getActiveUsbHubCount() >= hubPool_.size()) {
             hubPool_.push_back(new USBHub(Usb));
             return true;
         }
@@ -45,7 +45,7 @@ namespace dweedee {
      * @return true if a new USBH_MIDI object was created
      */
     bool UsbDevicePool::requestUsbMidi(USB *Usb) {
-        if ((getActiveUsbMidiCount() + 1) >= midiPool_.size()) {
+        if (getActiveUsbMidiCount() >= midiPool_.size()) {
             midiPool_.push_back(new USBH_MIDI(Usb));
             return true;
         }

@@ -13,15 +13,15 @@ namespace dweedee {
     }
 
     void Core::onDevicesAdded(UsbDeviceInfo **added, short count) {
-        // TODO: Create / enable UsbMidiDevices with contents of added[]
-        Serial << "!! onDevicesAdded :: Count: " << count << endl << "!!!!!!!!!!!!!" << endl << hex;
-        for (short i = 0; i < count; i++) {
-            Serial << "CONNECTION EVENT" << endl
-                   << "Device:        "  << added[i]->productName << " | PID: " << added[i]->pid << endl  // TODO: Format as HEX
-                   << "Manufacturer:  "  << added[i]->vendorName  << " | VID: " << added[i]->vid << endl
-                   << "Adding `UsbDeviceInfo` to index." << endl << endl;
+        for (short i = 0; i < count; ++i) {
+            if (added[i] == nullptr) {
+                continue;
+            }
+            USBH_MIDI *device = usbMgr->getUsbDevicePool()->getUsbMidi(added[i]->devAddress);
+            if (device != nullptr) {
+                midiDevices_.push_back(new UsbMidiDevice(*device, *added[i]));
+            }
         }
-        Serial << dec;
     }
 
     void Core::onDevicesRemoved(UsbDeviceInfo **removed, short count) {

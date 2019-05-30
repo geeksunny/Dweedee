@@ -5,6 +5,7 @@
 
 #include "Hotplug.h"
 #include "UsbDeviceInfo.h"
+#include "MidiDevice.h"
 
 
 namespace dweedee {
@@ -13,6 +14,7 @@ namespace dweedee {
     class Core : HotplugEventHandler {
 
         HotplugManager *usbMgr;
+        std::deque<MidiDevice*> midiDevices_;
 
     public:
         explicit Core(USB *Usb);

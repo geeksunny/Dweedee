@@ -27,9 +27,10 @@ namespace dweedee {
                 continue;
             }
             USBH_MIDI *midi = usbMgr->getUsbDevicePool()->getUsbMidi(added[i]->devAddress);
-            MidiDevice *device = findMidiDevice(added[i]->devAddress);
+            UsbMidiDevice *device = reinterpret_cast<UsbMidiDevice*>(findMidiDevice(added[i]->devAddress));
             if (device != nullptr) {
-                // TODO: senEnabled(true) , update device's usbh_midi object to `midi` if change is necessary
+                device->setDevice(midi);
+                device->setEnabled(true);
             } else if (midi != nullptr && usbMgr->isUsbMidi(added[i]->devAddress)) {
                 midiDevices_.push_back(new UsbMidiDevice(*midi, *added[i]));
             }

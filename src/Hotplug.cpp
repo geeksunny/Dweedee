@@ -341,10 +341,6 @@ namespace dweedee {
         return false;
     }
 
-    USB *HotplugManager::getUsb() const {
-        return Usb_;
-    }
-
     UsbDevicePool *HotplugManager::getUsbDevicePool() const {
         return devicePool;
     }

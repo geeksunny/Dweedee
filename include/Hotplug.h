@@ -64,7 +64,6 @@ namespace dweedee {
         void task();
         void processUsbDevice(UsbDevice *pdev);
         bool isUsbMidi(uint8_t devAddr);
-        USB *getUsb() const;
         UsbDevicePool *getUsbDevicePool() const;
 
     };

@@ -8,9 +8,6 @@
 #define MIDI_BYTE_MAX_LENGTH 3
 
 
-typedef uint8_t DataByte;
-
-
 namespace dweedee {
 
     struct MidiType {
@@ -41,33 +38,39 @@ namespace dweedee {
     };
 
 
-    struct StatusByte {
-        StatusByte() : value(0) {};
-
+    struct MidiPacket {
         union {
             struct {
                 uint8_t channel : 4;
                 uint8_t basicType : 4;
+                uint8_t data1 : 7;
+                uint8_t data1reserved : 1;  // must be zero
+                uint8_t data2 : 7;
+                uint8_t data2reserved : 1;  // must be zero
             } __attribute__((packed));
             struct {
                 uint8_t extendedType : 8;
             } __attribute__((packed));
-            uint8_t value;
+            uint8_t bytes[3] = {0,0,0};
         };
+        MidiPacket() = default;
     } __attribute__((packed));
 
 
     class MidiMessage {
 
-        StatusByte statusByte_;
-        DataByte byte1_;
-        DataByte byte2_;
+        MidiPacket data_;
+        uint8_t length_;
 
     public:
         MidiMessage(uint8_t bytes[], uint8_t length);
         void setChannel(uint8_t channel);
         void setType(MidiType::Basic type);
         void setType(MidiType::Extended type);
+        void setData(uint8_t data1);
+        void setData(uint8_t data1, uint8_t data2);
+        uint8_t *getBytes();
+        uint8_t getLength();
 
     };
 

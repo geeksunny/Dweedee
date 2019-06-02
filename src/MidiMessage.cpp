@@ -1,4 +1,3 @@
-#include <cstring>
 #include "MidiMessage.h"
 
 
@@ -6,29 +5,59 @@ namespace dweedee {
 
     MidiMessage::MidiMessage(uint8_t bytes[], uint8_t length) {
         switch (length) {
-            case 1:
-                statusByte_.value = bytes[0];
-            case 2:
-                byte1_ = bytes[1];
-            case 3:
             default:
-                byte2_ = bytes[2];
+                length = 3;
+            case 3:
+                data_.bytes[2] = bytes[2];
+            case 2:
+                data_.bytes[1] = bytes[1];
+            case 1:
+                data_.bytes[0] = bytes[0];
                 break;
             case 0:
                 break;
         }
+        length_ = length;
     }
 
     void MidiMessage::setChannel(uint8_t channel) {
-        statusByte_.channel = channel;
+        data_.channel = channel;
+        if (length_ == 0) {
+            length_ = 1;
+        }
     }
 
     void MidiMessage::setType(dweedee::MidiType::Basic type) {
-        statusByte_.basicType = type;
+        data_.basicType = type;
+        if (length_ == 0) {
+            length_ = 1;
+        }
     }
 
     void MidiMessage::setType(dweedee::MidiType::Extended type) {
-        statusByte_.extendedType = type;
+        data_.extendedType = type;
+        if (length_ == 0) {
+            length_ = 1;
+        }
+    }
+
+    void MidiMessage::setData(uint8_t data1) {
+        data_.data1 = data1;
+        length_ = 2;
+    }
+
+    void MidiMessage::setData(uint8_t data1, uint8_t data2) {
+        data_.data1 = data1;
+        data_.data2 = data2;
+        length_ = 3;
+    }
+
+    uint8_t *MidiMessage::getBytes() {
+        return data_.bytes;
+    }
+
+    uint8_t MidiMessage::getLength() {
+        return length_;
     }
 
 }

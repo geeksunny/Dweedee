@@ -2,7 +2,7 @@
 #define DWEEDEE_MIDIMESSAGE_H
 
 
-#include <stdint-gcc.h>
+#include <MIDI.h>
 
 
 #define MIDI_BYTE_MAX_LENGTH 3
@@ -64,6 +64,7 @@ namespace dweedee {
 
     public:
         MidiMessage(uint8_t bytes[], uint8_t length);
+        MidiMessage(midi::MidiType midiType, uint8_t midiChannel, uint8_t data1, uint8_t data2);
         void setChannel(uint8_t channel);
         void setType(MidiType::Basic type);
         void setType(MidiType::Extended type);

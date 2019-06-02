@@ -20,6 +20,13 @@ namespace dweedee {
         length_ = length;
     }
 
+    MidiMessage::MidiMessage(midi::MidiType midiType, uint8_t midiChannel, uint8_t data1, uint8_t data2) {
+        data_.bytes[0] = (midiType | ((midiChannel - 1) & 0x0f));
+        data_.bytes[1] = data1;
+        data_.bytes[2] = data2;
+        length_ = (data2 > 0) ? 3 : (data1 > 0) ? 2 : 1;
+    }
+
     void MidiMessage::setChannel(uint8_t channel) {
         data_.channel = channel;
         if (length_ == 0) {

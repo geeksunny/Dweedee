@@ -4,6 +4,7 @@
 #include <SPI.h>
 #include <Usb.h>
 #include <usbh_midi.h>
+#include <MIDI.h>
 
 #include "UsbDeviceInfo.h"
 #include "MidiMessage.h"
@@ -46,6 +47,7 @@ namespace dweedee {
     class SerialMidiDevice : public MidiDevice {
 
         HardwareSerial *serial_;
+        midi::MidiInterface<HardwareSerial> midi_;
 
     public:
         SerialMidiDevice(HardwareSerial &serial);

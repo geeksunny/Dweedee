@@ -6,6 +6,7 @@
 #include <usbh_midi.h>
 
 #include "UsbDeviceInfo.h"
+#include "MidiMessage.h"
 
 
 namespace dweedee {
@@ -15,8 +16,8 @@ namespace dweedee {
         bool enabled_ = true;
 
     public:
-        virtual void read() = 0;
-        virtual void write() = 0;
+        virtual MidiMessage* read() = 0;
+        virtual void write(MidiMessage *message) = 0;
 
         virtual uint8_t getAddress() { return 0; }
 
@@ -33,9 +34,10 @@ namespace dweedee {
 
     public:
 
-        UsbMidiDevice(USBH_MIDI &usbMidi, UsbDeviceInfo &deviceInfo);
-        void read() override;
-        void write() override;
+        UsbMidiDevice(USBH_MIDI *usbMidi, UsbDeviceInfo *deviceInfo);
+        void setDevice(USBH_MIDI *usbMidi);
+        MidiMessage* read() override;
+        void write(MidiMessage *message) override;
         uint8_t getAddress() override;
 
     };
@@ -47,8 +49,8 @@ namespace dweedee {
 
     public:
         SerialMidiDevice(HardwareSerial &serial);
-        void read() override;
-        void write() override;
+        MidiMessage* read() override;
+        void write(MidiMessage *message) override;
 
     };
 

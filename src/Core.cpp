@@ -32,7 +32,7 @@ namespace dweedee {
                 device->setDevice(midi);
                 device->setEnabled(true);
             } else if (midi != nullptr && usbMgr->isUsbMidi(added[i]->devAddress)) {
-                midiDevices_.push_back(new UsbMidiDevice(*midi, *added[i]));
+                midiDevices_.push_back(new UsbMidiDevice(midi, added[i]));
             }
         }
     }

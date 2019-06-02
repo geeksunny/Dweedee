@@ -3,15 +3,21 @@
 
 namespace dweedee {
 
-    UsbMidiDevice::UsbMidiDevice(USBH_MIDI &usbMidi, UsbDeviceInfo &deviceInfo) : usbMidi_(&usbMidi), deviceInfo_(&deviceInfo) {
-        // TODO
+
+    UsbMidiDevice::UsbMidiDevice(USBH_MIDI *usbMidi, UsbDeviceInfo *deviceInfo) : usbMidi_(usbMidi), deviceInfo_(deviceInfo) {
+        // TODO : Null checks?
     }
 
-    void UsbMidiDevice::read() {
+    void UsbMidiDevice::setDevice(USBH_MIDI *usbMidi) {
+        // TODO : Null check?
+        usbMidi_ = usbMidi;
+    }
+
+    MidiMessage *UsbMidiDevice::read() {
         //todo
     }
 
-    void UsbMidiDevice::write() {
+    void UsbMidiDevice::write(MidiMessage *message) {
         //todo
     }
 
@@ -21,15 +27,16 @@ namespace dweedee {
 
 
     SerialMidiDevice::SerialMidiDevice(HardwareSerial &serial) : serial_(&serial) {
-        //
+        // TODO : Null checks?
     }
 
-    void SerialMidiDevice::read() {
+    MidiMessage *SerialMidiDevice::read() {
         //todo
     }
 
-    void SerialMidiDevice::write() {
+    void SerialMidiDevice::write(MidiMessage *message) {
         //todo
     }
+
 
 }

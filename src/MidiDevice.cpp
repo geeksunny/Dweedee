@@ -17,7 +17,7 @@ namespace dweedee {
     MidiMessage *UsbMidiDevice::read() {
         // TODO: sysex handling
         uint8_t size;
-        uint8_t buf[MIDI_BYTE_MAX_LENGTH];
+        uint8_t buf[3];
         do {
             if ((size = usbMidi_->RecvData(buf)) > 0) {
                 return new MidiMessage(buf, size);
@@ -42,7 +42,14 @@ namespace dweedee {
 
     MidiMessage *SerialMidiDevice::read() {
         if (midi_.read()) {
-            return new MidiMessage(midi_.getType(), midi_.getChannel(), midi_.getData1(), midi_.getData2());
+            switch (midi_.getType()) {
+                case midi::ActiveSensing:
+                case midi::SystemExclusive:
+                    // TODO: Implement parsing of these types.
+                    break;
+                default:
+                    return new MidiMessage(midi_.getType(), midi_.getChannel(), midi_.getData1(), midi_.getData2());
+            }
         }
         return nullptr;
     }

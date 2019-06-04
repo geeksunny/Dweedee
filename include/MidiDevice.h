@@ -12,12 +12,22 @@
 
 namespace dweedee {
 
+    class MidiDevice;   // Predeclared for use in MidiReadHandler
+
+    class MidiReadHandler {
+
+    public:
+        virtual void onMidiData(MidiDevice *device, MidiMessage *message) = 0;
+
+    };
+
+
     class MidiDevice {
 
         bool enabled_ = true;
 
     public:
-        virtual MidiMessage* read() = 0;
+        virtual MidiMessage* read(MidiReadHandler handler) = 0;
         virtual void write(MidiMessage *message) = 0;
 
         virtual uint8_t getAddress() { return 0; }

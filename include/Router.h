@@ -16,8 +16,9 @@ namespace dweedee {
 
     public:
         Result(bool consumed, bool failed);
-        Result(MidiMessage *message);
+        explicit Result(MidiMessage *message);
         Result(MidiMessage *messages[], uint8_t msgCount);
+//        ~Result();    // TODO!
         bool isConsumed();
         bool isFailed();
         bool shouldBroadcast();
@@ -33,13 +34,16 @@ namespace dweedee {
         std::deque<MidiDevice*> inputs_;
         std::deque<MidiDevice*> outputs_;
         // todo: filters
-        bool enabled_ = true;   // todo : should this default to false?
+        bool activated_ = false;
 
         void onMidiData(MidiDevice *device, MidiMessage *message) override;
 
     public:
         Mapping();
+//        ~Mapping();   // TODO!
         Result process();
+        bool activate();
+        bool deactivate();
         bool addInput(MidiDevice *inputDevice);
         bool addOutput(MidiDevice *outputDevice);
         void broadcast(MidiMessage *message);
@@ -50,15 +54,25 @@ namespace dweedee {
 
     class Router {
 
+        friend class Mapping;
+
         static Router *instance;
 
         bool paused_ = false;
-        std::deque<Mapping> mappings_;
+        std::deque<std::pair<MidiDevice*, std::deque<Mapping*>>> inputMappings_;
+        std::deque<Mapping*> mappings_;
+
+        bool addMapping(Mapping *mapping);
+        bool removeMapping(Mapping *mapping);
+        bool registerInputDevice(MidiDevice inputDevice);
+        bool unregisterInputDevice(MidiDevice inputDevice);
+        bool deviceIsMapped(MidiDevice inputDevice);
 
     public:
         static Router *getInstance();
 
         Router();
+//        ~Router();    // TODO!
         void task();
         void setPaused(bool paused);
         void toggle();

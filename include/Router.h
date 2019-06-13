@@ -11,7 +11,7 @@ namespace dweedee {
 
         bool consumed_;
         bool failed_;
-        uint8_t msgCount;
+        uint8_t msgCount_;
         MidiMessage *messages_[];
 
     public:
@@ -52,6 +52,8 @@ namespace dweedee {
     };
 
 
+    typedef std::pair<MidiDevice*, std::deque<Mapping*>> InputMappingPair;
+
     class Router {
 
         friend class Mapping;
@@ -59,14 +61,16 @@ namespace dweedee {
         static Router *instance;
 
         bool paused_ = false;
-        std::deque<std::pair<MidiDevice*, std::deque<Mapping*>>> inputMappings_;
+        std::deque<InputMappingPair> inputMappings_;
         std::deque<Mapping*> mappings_;
 
         bool addMapping(Mapping *mapping);
         bool removeMapping(Mapping *mapping);
-        bool registerInputDevice(MidiDevice inputDevice);
-        bool unregisterInputDevice(MidiDevice inputDevice);
-        bool deviceIsMapped(MidiDevice inputDevice);
+        bool mapInputDevice(MidiDevice *inputDevice, Mapping *mapping);
+        bool removeInputMapping(MidiDevice *inputDevice, Mapping *mapping);
+        bool deviceIsMapped(MidiDevice *inputDevice);
+
+        std::deque<InputMappingPair>::deque_iter findInputMappingPair(MidiDevice *device);
 
     public:
         static Router *getInstance();

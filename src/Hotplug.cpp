@@ -121,7 +121,7 @@ namespace dweedee {
             if ((*it)->devAddress == devAddress) {
                 break;
             }
-            it++;
+            ++it;
         }
         return it;
     }

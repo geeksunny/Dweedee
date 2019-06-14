@@ -29,21 +29,22 @@ namespace dweedee {
     };
 
 
-    class Mapping : MidiReadHandler {
+    class Mapping {
+
+        friend class Router;
 
         std::deque<MidiDevice*> inputs_;
         std::deque<MidiDevice*> outputs_;
         // todo: filters
         bool activated_ = false;
 
-        void onMidiData(MidiDevice *device, MidiMessage *message) override;
-
     public:
         Mapping();
 //        ~Mapping();   // TODO!
-        Result process();
+        Result process(MidiMessage *message);
         bool activate();
         bool deactivate();
+        bool isActivated();
         bool addInput(MidiDevice *inputDevice);
         bool addOutput(MidiDevice *outputDevice);
         void broadcast(MidiMessage *message);
@@ -52,7 +53,26 @@ namespace dweedee {
     };
 
 
-    typedef std::pair<MidiDevice*, std::deque<Mapping*>> InputMappingPair;
+    class InputMapping : MidiReadHandler {
+
+        friend class Router;
+
+        MidiDevice *device_;
+        std::deque<Mapping*> mappings_;
+
+        void onMidiData(MidiDevice *device, MidiMessage *message) override;
+
+    public:
+        bool operator==(const MidiDevice &rhs) const;
+        bool operator!=(const MidiDevice &rhs) const;
+
+        InputMapping(MidiDevice *inputDevice);
+        bool add(Mapping *mapping);
+        bool remove(Mapping *mapping);
+        bool isEmpty();
+
+    };
+
 
     class Router {
 
@@ -61,7 +81,7 @@ namespace dweedee {
         static Router *instance;
 
         bool paused_ = false;
-        std::deque<InputMappingPair> inputMappings_;
+        std::deque<InputMapping> inputMappings_;
         std::deque<Mapping*> mappings_;
 
         bool addMapping(Mapping *mapping);
@@ -70,7 +90,7 @@ namespace dweedee {
         bool removeInputMapping(MidiDevice *inputDevice, Mapping *mapping);
         bool deviceIsMapped(MidiDevice *inputDevice);
 
-        std::deque<InputMappingPair>::deque_iter findInputMappingPair(MidiDevice *device);
+        std::deque<InputMapping>::deque_iter findInputMapping(MidiDevice *device);
 
     public:
         static Router *getInstance();

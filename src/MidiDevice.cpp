@@ -14,7 +14,7 @@ namespace dweedee {
         usbMidi_ = usbMidi;
     }
 
-    MidiMessage *UsbMidiDevice::read() {
+    MidiMessage *UsbMidiDevice::read(MidiReadHandler &handler) {
         // TODO: sysex handling
         uint8_t size;
         uint8_t buf[3];
@@ -40,7 +40,7 @@ namespace dweedee {
         // TODO : Null checks?
     }
 
-    MidiMessage *SerialMidiDevice::read() {
+    MidiMessage *SerialMidiDevice::read(MidiReadHandler &handler) {
         if (midi_.read()) {
             switch (midi_.getType()) {
                 case midi::ActiveSensing:

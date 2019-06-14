@@ -1,5 +1,7 @@
 #include "Router.h"
-#include "Utility.h"
+
+
+#define HAS(Iterable, Value)    (std::find(Iterable.begin(), Iterable.end(), Value) != Iterable.end())
 
 
 namespace dweedee {
@@ -46,12 +48,9 @@ namespace dweedee {
         // todo
     }
 
-    void Mapping::onMidiData(MidiDevice *device, MidiMessage *message) {
-        //
-    }
-
-    Result Mapping::process() {
-        // todo
+    Result Mapping::process(MidiMessage *message) {
+        // TODO: Run through mapping's filters when implementing
+        return Result(message);
     }
 
     bool Mapping::activate() {
@@ -70,15 +69,26 @@ namespace dweedee {
         return activated_;
     }
 
+    bool Mapping::isActivated() {
+        return activated_;
+    }
+
     bool Mapping::addInput(dweedee::MidiDevice *inputDevice) {
-        //
-        if (activated_ && Router::getInstance() != nullptr) {
-            Router::getInstance()->mapInputDevice(inputDevice, this);
+        if (!HAS(inputs_, inputDevice)) {
+            inputs_.push_back(inputDevice);
+            if (activated_ && Router::getInstance() != nullptr) {
+                Router::getInstance()->mapInputDevice(inputDevice, this);
+            }
+            return true;
         }
+        return false;
     }
 
     bool Mapping::addOutput(dweedee::MidiDevice *outputDevice) {
-        // TODO:
+        if (!HAS(outputs_, outputDevice)) {
+            outputs_.push_back(outputDevice);
+            return true;
+        }
         return false;
     }
 
@@ -88,6 +98,43 @@ namespace dweedee {
 
     void Mapping::broadcast(dweedee::MidiMessage **messages, uint8_t msgCount) {
         // multiple messages
+    }
+
+
+    InputMapping::InputMapping(MidiDevice *inputDevice) : device_(inputDevice) {
+    }
+
+    bool InputMapping::operator==(const MidiDevice &rhs) const {
+        return device_ == &rhs;
+    }
+
+    bool InputMapping::operator!=(const MidiDevice &rhs) const {
+        return device_ != &rhs;
+    }
+
+    void InputMapping::onMidiData(MidiDevice *device, MidiMessage *message) {
+        for (auto it = mappings_.begin(); it != mappings_.end(); ++it) {
+        }
+    }
+
+    bool InputMapping::add(dweedee::Mapping *mapping) {
+        if (!HAS(mappings_, mapping)) {
+            mappings_.push_back(mapping);
+            return true;
+        }
+        return false;
+    }
+
+    bool InputMapping::remove(dweedee::Mapping *mapping) {
+        if (HAS(mappings_, mapping)) {  // TODO: Replace with own call to std::find for usage in deletion
+            // todo : remove from mapping
+            return true;
+        }
+        return false;
+    }
+
+    bool InputMapping::isEmpty() {
+        return mappings_.empty();
     }
 
 
@@ -105,7 +152,15 @@ namespace dweedee {
     }
 
     bool Router::addMapping(dweedee::Mapping *mapping) {
-        //
+        // if Router::getInstance()->hasMapping(this) return false
+        if (HAS(mappings_, mapping) || mapping->isActivated()) {
+            return false;
+        }
+        // TODO: iterate through mappings.inputs_ and run mapInputDevice(input, mapping) on each
+        mappings_.push_back(mapping);
+        for (auto it = mapping->inputs_.begin(); it != mapping->inputs_.end(); ++it) {
+            mapInputDevice((*it), mapping);
+        }
     }
 
     bool Router::removeMapping(dweedee::Mapping *mapping) {
@@ -114,10 +169,14 @@ namespace dweedee {
     }
 
     bool Router::mapInputDevice(dweedee::MidiDevice *inputDevice, dweedee::Mapping *mapping) {
-        auto pair = findInputMappingPair(inputDevice);
+        // TODO: REVISIT THIS!!!!!!!!!
+        auto pair = findInputMapping(inputDevice);
         if (pair != inputMappings_.end()) {
         }
-        if (findInputMappingPair(inputDevice) == inputMappings_.end()) {
+//        return false;
+
+        // TODO: DELETE THIS BELOW
+        if (findInputMapping(inputDevice) == inputMappings_.end()) {
             // No registration exists; create one.
             std::pair<MidiDevice*, std::deque<Mapping*>> pair;
             pair.first = inputDevice;
@@ -126,16 +185,20 @@ namespace dweedee {
     }
 
     bool Router::removeInputMapping(dweedee::MidiDevice *inputDevice, dweedee::Mapping *mapping) {
-        auto pair = findInputMappingPair(inputDevice);
+        auto pair = findInputMapping(inputDevice);
         if (pair != inputMappings_.end()) {
+            // TODO: remove from pair->second
+            // TODO: if ->second is empty, remove input mapping entirely
+            return true;
         }
+        return false;
     }
 
     bool Router::deviceIsMapped(dweedee::MidiDevice *inputDevice) {
-        return findInputMappingPair(inputDevice) != inputMappings_.end();
+        return findInputMapping(inputDevice) != inputMappings_.end();
     }
 
-    std::deque<InputMappingPair>::deque_iter Router::findInputMappingPair(dweedee::MidiDevice *device) {
+    std::deque<InputMapping>::deque_iter Router::findInputMapping(dweedee::MidiDevice *device) {
         auto it = inputMappings_.begin();
         while (it != inputMappings_.end()) {
             if (it->first == device) {
@@ -147,7 +210,10 @@ namespace dweedee {
     }
 
     void Router::task() {
-        if (!paused_) {
+        if (paused_) {
+            return;
+        }
+        for (auto it = inputMappings_.begin(); it != inputMappings_.end(); ++it) {
             // TODO: Iterate through live mappings, read, write, delete, repeat
         }
     }

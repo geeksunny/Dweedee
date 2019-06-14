@@ -27,7 +27,7 @@ namespace dweedee {
         bool enabled_ = true;
 
     public:
-        virtual MidiMessage* read(MidiReadHandler handler) = 0;
+        virtual MidiMessage* read(MidiReadHandler &handler) = 0;
         virtual void write(MidiMessage *message) = 0;
 
         virtual uint8_t getAddress() { return 0; }
@@ -47,7 +47,7 @@ namespace dweedee {
 
         UsbMidiDevice(USBH_MIDI *usbMidi, UsbDeviceInfo *deviceInfo);
         void setDevice(USBH_MIDI *usbMidi);
-        MidiMessage* read() override;
+        MidiMessage* read(MidiReadHandler &handler) override;
         void write(MidiMessage *message) override;
         uint8_t getAddress() override;
 
@@ -61,7 +61,7 @@ namespace dweedee {
 
     public:
         SerialMidiDevice(HardwareSerial &serial);
-        MidiMessage* read() override;
+        MidiMessage* read(MidiReadHandler &handler) override;
         void write(MidiMessage *message) override;
 
     };

@@ -117,7 +117,7 @@ namespace dweedee {
             uint8_t devAddress) {
 
         auto it = deque->begin();
-        while (it < deque->end()) {
+        while (it < deque->end()) { // TODO: Is the < operator actually okay here?
             if ((*it)->devAddress == devAddress) {
                 break;
             }

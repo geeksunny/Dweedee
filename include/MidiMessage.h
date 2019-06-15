@@ -54,6 +54,9 @@ namespace dweedee {
 
     class MidiMessage {
 
+        // TODO: Add copy constructor
+        // TODO: Override with variable length byte array for sysex?
+        // TODO: A timestamp value could be useful for a delay effect
         MidiPacket data_;
         uint8_t length_;
 

@@ -75,6 +75,7 @@ namespace dweedee {
     }
 
     void MidiMessage::setChannel(uint8_t channel) {
+        // TODO: Figure out rules for channel, should value passed in be 0-based or 1-based?
         data_.channel = channel;
     }
 

@@ -46,7 +46,9 @@ namespace dweedee {
         bool deactivate();
         bool isActivated();
         bool addInput(MidiDevice *inputDevice);
+//        bool removeInput(MidiDevice *inputDevice);    // TODO
         bool addOutput(MidiDevice *outputDevice);
+//        bool removeOutput(MidiDevice *outputDevice);  // TODO
         void broadcast(MidiMessage *message);
         void broadcast(MidiMessage **messages, uint8_t msgCount);
 

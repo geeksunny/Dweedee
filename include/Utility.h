@@ -4,6 +4,7 @@
 
 namespace dweedee {
 
+    // TODO: Migrate this into a global error handler class
     void halt();
 
     void haltBlinking(unsigned long interval);

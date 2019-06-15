@@ -8,15 +8,18 @@
 namespace dweedee {
 
     Result::Result(bool consumed, bool failed) : consumed_(consumed), failed_(failed), msgCount_(0) {
-        // todo
+        // todo - anything else needed here??
     }
 
     Result::Result(dweedee::MidiMessage *message) : consumed_(false), failed_(false), msgCount_(1) {
         // todo
+        // TODO: malloc for messages_
+        messages_[0] = message;
     }
 
     Result::Result(dweedee::MidiMessage **messages, uint8_t msgCount) {
         // todo
+        // TODO: malloc for messages_
     }
 
     bool Result::isConsumed() {
@@ -95,14 +98,17 @@ namespace dweedee {
 
     void Mapping::broadcast(dweedee::MidiMessage *message) {
         // single message
+        // TODO: loop through this->outputs_, .write(message) to all in deque.
     }
 
     void Mapping::broadcast(dweedee::MidiMessage **messages, uint8_t msgCount) {
         // multiple messages
+        // TODO: loop through this->outputs_, loop messages and .write(message) to all in deque.
     }
 
 
     InputMapping::InputMapping(MidiDevice *inputDevice) : device_(inputDevice) {
+        //
     }
 
     bool InputMapping::operator==(const MidiDevice &rhs) const {
@@ -115,6 +121,8 @@ namespace dweedee {
 
     void InputMapping::onMidiData(MidiDevice *device, MidiMessage *message) {
         for (auto it = mappings_.begin(); it != mappings_.end(); ++it) {
+            // TODO: send message through Mapping.process(),
+            //  determine if loop should end early or proceed to the next mapping
         }
     }
 
@@ -201,6 +209,12 @@ namespace dweedee {
         }
         for (auto it = inputMappings_.begin(); it != inputMappings_.end(); ++it) {
             // TODO: Iterate through live mappings, read, write, delete, repeat
+            //  - read message from input
+            //  - loop through mappings
+            //  - check result of mapping->process()
+            //  - if should broadcast, send to broadcast()
+            //  - delete the MidiMessage/Result objects!
+            //  - continue to next input; repeat;
         }
     }
 

@@ -33,7 +33,7 @@ namespace dweedee {
         virtual uint8_t getAddress() { return 0; }
 
         bool isEnabled() { return enabled_; }
-        void setEnabled(bool enabled) { enabled_ = enabled;}
+        void setEnabled(bool enabled) { enabled_ = enabled; }
 
     };
 

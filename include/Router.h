@@ -4,6 +4,7 @@
 
 #include <deque>
 #include "MidiDevice.h"
+#include "Filter.h"
 
 namespace dweedee {
 
@@ -35,7 +36,7 @@ namespace dweedee {
 
         std::deque<MidiDevice*> inputs_;
         std::deque<MidiDevice*> outputs_;
-        // todo: filters
+        std::deque<Filter*> filters_;
         bool activated_ = false;
 
     public:
@@ -46,9 +47,11 @@ namespace dweedee {
         bool deactivate();
         bool isActivated();
         bool addInput(MidiDevice *inputDevice);
-//        bool removeInput(MidiDevice *inputDevice);    // TODO
+        bool removeInput(MidiDevice *inputDevice);
         bool addOutput(MidiDevice *outputDevice);
-//        bool removeOutput(MidiDevice *outputDevice);  // TODO
+        bool removeOutput(MidiDevice *outputDevice);
+        bool addFilter(Filter *filter);
+        bool removeFilter(Filter *filter);
         void broadcast(MidiMessage *message);
         void broadcast(MidiMessage **messages, uint8_t msgCount);
 

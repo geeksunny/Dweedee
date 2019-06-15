@@ -88,9 +88,44 @@ namespace dweedee {
         return false;
     }
 
+    bool Mapping::removeInput(dweedee::MidiDevice *inputDevice) {
+        auto it = FIND(inputs_, inputDevice);
+        if (it != inputs_.end()) {
+            inputs_.erase(it);
+            return true;
+        }
+        return false;
+    }
+
     bool Mapping::addOutput(dweedee::MidiDevice *outputDevice) {
         if (!HAS(outputs_, outputDevice)) {
             outputs_.push_back(outputDevice);
+            return true;
+        }
+        return false;
+    }
+
+    bool Mapping::removeOutput(dweedee::MidiDevice *outputDevice) {
+        auto it = FIND(outputs_, outputDevice);
+        if (it != outputs_.end()) {
+            outputs_.erase(it);
+            return true;
+        }
+        return false;
+    }
+
+    bool Mapping::addFilter(dweedee::Filter *filter) {
+        if (!HAS(filters_, filter)) {
+            filters_.push_back(filter);
+            return true;
+        }
+        return false;
+    }
+
+    bool Mapping::removeFilter(dweedee::Filter *filter) {
+        auto it = FIND(filters_, filter);
+        if (it != filters_.end()) {
+            filters_.erase(it);
             return true;
         }
         return false;
@@ -135,8 +170,9 @@ namespace dweedee {
     }
 
     bool InputMapping::remove(dweedee::Mapping *mapping) {
-        if (HAS(mappings_, mapping)) {  // TODO: Replace with own call to std::find for usage in deletion
-            // todo : remove from mapping
+        auto it = FIND(mappings_, mapping);
+        if (it != mappings_.end()) {
+            mappings_.erase(it);
             return true;
         }
         return false;
@@ -161,15 +197,14 @@ namespace dweedee {
     }
 
     bool Router::addMapping(dweedee::Mapping *mapping) {
-        // if Router::getInstance()->hasMapping(this) return false
         if (HAS(mappings_, mapping) || mapping->isActivated()) {
             return false;
         }
-        // TODO: iterate through mappings.inputs_ and run mapInputDevice(input, mapping) on each
         mappings_.push_back(mapping);
         for (auto it = mapping->inputs_.begin(); it != mapping->inputs_.end(); ++it) {
             mapInputDevice((*it), mapping);
         }
+        return true;
     }
 
     bool Router::removeMapping(dweedee::Mapping *mapping) {

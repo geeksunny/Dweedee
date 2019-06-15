@@ -2,6 +2,7 @@
 
 
 #define HAS(Iterable, Value)    (std::find(Iterable.begin(), Iterable.end(), Value) != Iterable.end())
+#define FIND(Iterable, Value)   (std::find(Iterable.begin(), Iterable.end(), Value))
 
 
 namespace dweedee {
@@ -169,44 +170,29 @@ namespace dweedee {
     }
 
     bool Router::mapInputDevice(dweedee::MidiDevice *inputDevice, dweedee::Mapping *mapping) {
-        // TODO: REVISIT THIS!!!!!!!!!
-        auto pair = findInputMapping(inputDevice);
-        if (pair != inputMappings_.end()) {
+        auto inputMapping = FIND(inputMappings_, inputDevice);
+        if (inputMapping != inputMappings_.end()) {
+            return inputMapping->add(mapping);
         }
-//        return false;
-
-        // TODO: DELETE THIS BELOW
-        if (findInputMapping(inputDevice) == inputMappings_.end()) {
-            // No registration exists; create one.
-            std::pair<MidiDevice*, std::deque<Mapping*>> pair;
-            pair.first = inputDevice;
-            inputMappings_.push_back(pair);
-        }
+        return false;
     }
 
     bool Router::removeInputMapping(dweedee::MidiDevice *inputDevice, dweedee::Mapping *mapping) {
-        auto pair = findInputMapping(inputDevice);
-        if (pair != inputMappings_.end()) {
-            // TODO: remove from pair->second
-            // TODO: if ->second is empty, remove input mapping entirely
-            return true;
+        auto inputMapping = FIND(inputMappings_, inputDevice);
+        if (inputMapping != inputMappings_.end()) {
+            bool result = inputMapping->remove(mapping);
+            if (inputMapping->isEmpty()) {
+                // TODO: remove inputMapping entirely, it is no longer needed.
+                //  ~remove from inputMappings_
+                //  ~delete inputMapping
+            }
+            return result;
         }
         return false;
     }
 
     bool Router::deviceIsMapped(dweedee::MidiDevice *inputDevice) {
-        return findInputMapping(inputDevice) != inputMappings_.end();
-    }
-
-    std::deque<InputMapping>::deque_iter Router::findInputMapping(dweedee::MidiDevice *device) {
-        auto it = inputMappings_.begin();
-        while (it != inputMappings_.end()) {
-            if (it->first == device) {
-                break;
-            }
-            ++it;
-        }
-        return it;
+        return HAS(mappings_, inputDevice);
     }
 
     void Router::task() {

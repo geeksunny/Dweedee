@@ -90,8 +90,6 @@ namespace dweedee {
         bool removeInputMapping(MidiDevice *inputDevice, Mapping *mapping);
         bool deviceIsMapped(MidiDevice *inputDevice);
 
-        std::deque<InputMapping>::deque_iter findInputMapping(MidiDevice *device);
-
     public:
         static Router *getInstance();
 

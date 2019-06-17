@@ -66,6 +66,7 @@ namespace dweedee {
         std::deque<Mapping*> mappings_;
 
         void onMidiData(MidiDevice *device, MidiMessage *message) override;
+        void process();
 
     public:
         bool operator==(const MidiDevice &rhs) const;

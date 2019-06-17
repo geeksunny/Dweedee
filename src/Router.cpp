@@ -132,13 +132,19 @@ namespace dweedee {
     }
 
     void Mapping::broadcast(dweedee::MidiMessage *message) {
-        // single message
-        // TODO: loop through this->outputs_, .write(message) to all in deque.
+        for (auto output = outputs_.begin(); output != outputs_.end(); ++output) {
+            (*output)->write(message);
+        }
     }
 
     void Mapping::broadcast(dweedee::MidiMessage **messages, uint8_t msgCount) {
-        // multiple messages
-        // TODO: loop through this->outputs_, loop messages and .write(message) to all in deque.
+        // TODO: For latency purposes, would it be better to send each message to each output before moving onto the next?
+        //  Here we are sending all the messages to each input in a bulk operation...
+        for (auto output = outputs_.begin(); output != outputs_.end(); ++output) {
+            for (int i = 0; i < msgCount; ++i) {
+                (*output)->write(messages[i]);
+            }
+        }
     }
 
 
@@ -155,10 +161,29 @@ namespace dweedee {
     }
 
     void InputMapping::onMidiData(MidiDevice *device, MidiMessage *message) {
-        for (auto it = mappings_.begin(); it != mappings_.end(); ++it) {
+        // TODO: Iterate through live mappings, read, write, delete, repeat
+        //  - read message from input
+        //  - loop through mappings
+        //  - check result of mapping->process()
+        //  - if should broadcast, send to broadcast()
+        //  - delete the MidiMessage/Result objects!
+        //  - continue to next input; repeat;
+        Result *result;
+        for (auto mapping = mappings_.begin(); mapping != mappings_.end(); ++mapping) {
             // TODO: send message through Mapping.process(),
             //  determine if loop should end early or proceed to the next mapping
+            result = (*mapping)->process(message);
+            if (result->shouldBroadcast()) {
+                // broadcast here
+            } else if (result->isConsumed()) {
+                break;
+            }
         }
+        delete result;
+    }
+
+    void InputMapping::process() {
+        device_->read(*this);
     }
 
     bool InputMapping::add(dweedee::Mapping *mapping) {
@@ -198,6 +223,7 @@ namespace dweedee {
 
     bool Router::addMapping(dweedee::Mapping *mapping) {
         if (HAS(mappings_, mapping) || mapping->isActivated()) {
+            // TODO: Should the check to mapping->isActivated() prevent success here?
             return false;
         }
         mappings_.push_back(mapping);
@@ -208,8 +234,15 @@ namespace dweedee {
     }
 
     bool Router::removeMapping(dweedee::Mapping *mapping) {
-        // TODO: iterate through mappings.inputs_ and run removeInputMapping(input, mapping) on each
-        // loop, true if found and removed, else false
+        auto mappingPos = FIND(mappings_, mapping);
+        if (mappingPos == mappings_.end()) {
+            return false;
+        }
+        for (auto input = mapping->inputs_.begin(); input != mapping->inputs_.end(); ++input) {
+            removeInputMapping(*input, mapping);
+        }
+        mappings_.erase(mappingPos);
+        return false;
     }
 
     bool Router::mapInputDevice(dweedee::MidiDevice *inputDevice, dweedee::Mapping *mapping) {
@@ -225,9 +258,7 @@ namespace dweedee {
         if (inputMapping != inputMappings_.end()) {
             bool result = inputMapping->remove(mapping);
             if (inputMapping->isEmpty()) {
-                // TODO: remove inputMapping entirely, it is no longer needed.
-                //  ~remove from inputMappings_
-                //  ~delete inputMapping
+                inputMappings_.erase(inputMapping);
             }
             return result;
         }
@@ -243,13 +274,7 @@ namespace dweedee {
             return;
         }
         for (auto it = inputMappings_.begin(); it != inputMappings_.end(); ++it) {
-            // TODO: Iterate through live mappings, read, write, delete, repeat
-            //  - read message from input
-            //  - loop through mappings
-            //  - check result of mapping->process()
-            //  - if should broadcast, send to broadcast()
-            //  - delete the MidiMessage/Result objects!
-            //  - continue to next input; repeat;
+            (*it).process();
         }
     }
 

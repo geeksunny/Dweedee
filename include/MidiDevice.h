@@ -9,64 +9,59 @@
 #include "UsbDeviceInfo.h"
 #include "MidiMessage.h"
 
-
 namespace dweedee {
 
-    class MidiDevice;   // Predeclared for use in MidiReadHandler
+class MidiDevice;   // Predeclared for use in MidiReadHandler
 
-    class MidiReadHandler {
+class MidiReadHandler {
 
-    public:
-        virtual void onMidiData(MidiDevice *device, MidiMessage *message) = 0;
+ public:
+  virtual void onMidiData(MidiDevice *device, MidiMessage *message) = 0;
 
-    };
+};
 
+class MidiDevice {
 
-    class MidiDevice {
+  bool enabled_ = true;
 
-        bool enabled_ = true;
+ public:
+  virtual MidiMessage *read(MidiReadHandler &handler) = 0;
+  virtual void write(MidiMessage *message) = 0;
 
-    public:
-        virtual MidiMessage* read(MidiReadHandler &handler) = 0;
-        virtual void write(MidiMessage *message) = 0;
+  virtual uint8_t getAddress() { return 0; }
 
-        virtual uint8_t getAddress() { return 0; }
+  bool isEnabled() { return enabled_; }
+  void setEnabled(bool enabled) { enabled_ = enabled; }
 
-        bool isEnabled() { return enabled_; }
-        void setEnabled(bool enabled) { enabled_ = enabled; }
+};
 
-    };
+class UsbMidiDevice : public MidiDevice {
 
+  USBH_MIDI *usbMidi_;
+  UsbDeviceInfo *deviceInfo_;
 
-    class UsbMidiDevice : public MidiDevice {
+ public:
 
-        USBH_MIDI *usbMidi_;
-        UsbDeviceInfo *deviceInfo_;
+  UsbMidiDevice(USBH_MIDI *usbMidi, UsbDeviceInfo *deviceInfo);
+  void setDevice(USBH_MIDI *usbMidi);
+  MidiMessage *read(MidiReadHandler &handler) override;
+  void write(MidiMessage *message) override;
+  uint8_t getAddress() override;
 
-    public:
+};
 
-        UsbMidiDevice(USBH_MIDI *usbMidi, UsbDeviceInfo *deviceInfo);
-        void setDevice(USBH_MIDI *usbMidi);
-        MidiMessage* read(MidiReadHandler &handler) override;
-        void write(MidiMessage *message) override;
-        uint8_t getAddress() override;
+class SerialMidiDevice : public MidiDevice {
 
-    };
+  HardwareSerial *serial_;
+  midi::MidiInterface<HardwareSerial> midi_;
 
+ public:
+  SerialMidiDevice(HardwareSerial &serial);
+  MidiMessage *read(MidiReadHandler &handler) override;
+  void write(MidiMessage *message) override;
 
-    class SerialMidiDevice : public MidiDevice {
-
-        HardwareSerial *serial_;
-        midi::MidiInterface<HardwareSerial> midi_;
-
-    public:
-        SerialMidiDevice(HardwareSerial &serial);
-        MidiMessage* read(MidiReadHandler &handler) override;
-        void write(MidiMessage *message) override;
-
-    };
+};
 
 }
-
 
 #endif //DWEEDEE_MIDIDEVICE_H

@@ -39,10 +39,13 @@ namespace dweedee {
         std::deque<Filter*> filters_;
         bool activated_ = false;
 
+        void broadcast(MidiMessage *message);
+        void broadcast(MidiMessage **messages, uint8_t msgCount);
+        Result process(MidiMessage *message);
+
     public:
         Mapping();
 //        ~Mapping();   // TODO!
-        Result process(MidiMessage *message);
         bool activate();
         bool deactivate();
         bool isActivated();
@@ -52,8 +55,6 @@ namespace dweedee {
         bool removeOutput(MidiDevice *outputDevice);
         bool addFilter(Filter *filter);
         bool removeFilter(Filter *filter);
-        void broadcast(MidiMessage *message);
-        void broadcast(MidiMessage **messages, uint8_t msgCount);
 
     };
 

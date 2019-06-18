@@ -39,7 +39,6 @@ namespace dweedee {
     }
 
     MidiMessage **Result::getMessages() {
-        //
         return messages_;
     }
 
@@ -50,6 +49,22 @@ namespace dweedee {
 
     Mapping::Mapping() {
         // todo
+    }
+
+    void Mapping::broadcast(dweedee::MidiMessage *message) {
+        for (auto output = outputs_.begin(); output != outputs_.end(); ++output) {
+            (*output)->write(message);
+        }
+    }
+
+    void Mapping::broadcast(dweedee::MidiMessage **messages, uint8_t msgCount) {
+        // TODO: For latency purposes, would it be better to send each message to each output before moving onto the next?
+        //  Here we are sending all the messages to each input in a bulk operation...
+        for (auto output = outputs_.begin(); output != outputs_.end(); ++output) {
+            for (int i = 0; i < msgCount; ++i) {
+                (*output)->write(messages[i]);
+            }
+        }
     }
 
     Result Mapping::process(MidiMessage *message) {
@@ -129,22 +144,6 @@ namespace dweedee {
             return true;
         }
         return false;
-    }
-
-    void Mapping::broadcast(dweedee::MidiMessage *message) {
-        for (auto output = outputs_.begin(); output != outputs_.end(); ++output) {
-            (*output)->write(message);
-        }
-    }
-
-    void Mapping::broadcast(dweedee::MidiMessage **messages, uint8_t msgCount) {
-        // TODO: For latency purposes, would it be better to send each message to each output before moving onto the next?
-        //  Here we are sending all the messages to each input in a bulk operation...
-        for (auto output = outputs_.begin(); output != outputs_.end(); ++output) {
-            for (int i = 0; i < msgCount; ++i) {
-                (*output)->write(messages[i]);
-            }
-        }
     }
 
 

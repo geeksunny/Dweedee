@@ -147,12 +147,12 @@ InputMapping::InputMapping(MidiDevice *inputDevice) : device_(inputDevice) {
   //
 }
 
-bool InputMapping::operator==(const MidiDevice &rhs) const {
-  return device_ == &rhs;
+bool InputMapping::operator==(const MidiDevice *rhs) const {
+  return device_ == rhs;
 }
 
-bool InputMapping::operator!=(const MidiDevice &rhs) const {
-  return device_ != &rhs;
+bool InputMapping::operator!=(const MidiDevice *rhs) const {
+  return device_ != rhs;
 }
 
 void InputMapping::onMidiData(MidiDevice *device, MidiMessage *message) {
@@ -260,7 +260,7 @@ bool Router::removeInputMapping(dweedee::MidiDevice *inputDevice, dweedee::Mappi
 }
 
 bool Router::deviceIsMapped(dweedee::MidiDevice *inputDevice) {
-  return HAS(mappings_, inputDevice);
+  return HAS(mappings_, &inputDevice);
 }
 
 void Router::task() {

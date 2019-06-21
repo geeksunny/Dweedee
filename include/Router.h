@@ -1,36 +1,18 @@
 #ifndef DWEEDEE_ROUTER_H
 #define DWEEDEE_ROUTER_H
 
-#include <deque>
+#include <queue>
 #include "MidiDevice.h"
 #include "Filter.h"
 
 namespace dweedee {
 
-class Result {
-
-  bool consumed_;
-  bool failed_;
-  uint8_t msgCount_;
-  MidiMessage *messages_[];
-
- public:
-  Result(bool consumed, bool failed);
-  explicit Result(MidiMessage *message);
-  Result(MidiMessage *messages[], uint8_t msgCount);
-//  ~Result();    // TODO!
-  bool isConsumed();
-  bool isFailed();
-  bool shouldBroadcast();
-  MidiMessage *getMessage();
-  MidiMessage **getMessages();
-  uint8_t getMessageCount();
-
-};
-
 class Mapping {
 
+  friend class InputMapping;
   friend class Router;
+
+  static std::queue<MidiMessage *> messages;
 
   std::deque<MidiDevice *> inputs_;
   std::deque<MidiDevice *> outputs_;

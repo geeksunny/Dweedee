@@ -7,20 +7,14 @@ class Result {
 
   bool consumed_;
   bool failed_;
-  uint8_t msgCount_;
-  MidiMessage *messages_[];
 
  public:
   Result(bool consumed, bool failed);
-  explicit Result(MidiMessage *message);
-  Result(MidiMessage *messages[], uint8_t msgCount);
 //  ~Result();    // TODO!
   bool isConsumed();
   bool isFailed();
   bool shouldBroadcast();
-  MidiMessage *getMessage();
-  MidiMessage **getMessages();
-  uint8_t getMessageCount();
+  void addMessage(MidiMessage *message);
 
 };
 

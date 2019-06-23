@@ -1,17 +1,20 @@
 #include "Router.h"
 
 // Queue macros
-#define CLEAR(Queue)            (while (!Queue.empty()) { Queue.pop(); })
+#define CLEAR(Queue)            while (!Queue->empty()) { Queue->pop(); }
 // Deque macros
 #define FIND(Iterable, Value)   (std::find(Iterable.begin(), Iterable.end(), Value))
 #define HAS(Iterable, Value)    (std::find(Iterable.begin(), Iterable.end(), Value) != Iterable.end())
 
 namespace dweedee {
 
-std::queue<MidiMessage *> Mapping::messages;
+std::queue<MidiMessage *> Mapping::processQueueA;
+std::queue<MidiMessage *> Mapping::processQueueB;
+std::queue<MidiMessage *> *Mapping::inputQueue = &Mapping::processQueueA;
+std::queue<MidiMessage *> *Mapping::outputQueue = &Mapping::processQueueB;
 
 Mapping::Mapping() {
-  // todo
+  //
 }
 
 void Mapping::broadcast(dweedee::MidiMessage *message) {
@@ -21,18 +24,41 @@ void Mapping::broadcast(dweedee::MidiMessage *message) {
 }
 
 void Mapping::broadcast(dweedee::MidiMessage **messages, uint8_t msgCount) {
-  // TODO: For latency purposes, would it be better to send each message to each output before moving onto the next?
-  //  Here we are sending all the messages to each input in a bulk operation...
-  for (auto output = outputs_.begin(); output != outputs_.end(); ++output) {
-    for (int i = 0; i < msgCount; ++i) {
+  for (int i = 0; i < msgCount; ++i) {
+    for (auto output = outputs_.begin(); output != outputs_.end(); ++output) {
       (*output)->write(messages[i]);
     }
   }
 }
 
-Result Mapping::process(MidiMessage *message) {
-  // TODO: Run through mapping's filters when implementing
-  return Result(message);
+bool Mapping::process(MidiMessage *message) {
+  // When this method returns, inputQueue & outputQueue must both be empty for the next time this method is executed.
+  if (filters_.empty()) {
+    broadcast(message);
+    return false;
+  }
+  inputQueue->push(new MidiMessage(*message));
+  for (auto filter = filters_.begin(); filter != filters_.end(); ++filter) {
+    while (!inputQueue->empty()) {
+      Result processed = (*filter)->process(inputQueue->front());
+      inputQueue->pop();
+      if (processed.isConsumed() || processed.isFailed()) {
+        CLEAR(inputQueue)
+        CLEAR(outputQueue)
+        return processed.isConsumed();
+      }
+    }
+    std::swap(inputQueue, outputQueue);
+  }
+  // Broadcast messages to outputs. Using inputQueue due to pointer swap at end of filter loop.
+  while (!inputQueue->empty()) {
+    for (auto output = outputs_.begin(); output != outputs_.end(); ++output) {
+      (*output)->write(inputQueue->front());
+    }
+    delete inputQueue->front();
+    inputQueue->pop();
+  }
+  return false;
 }
 
 bool Mapping::activate() {
@@ -122,25 +148,13 @@ bool InputMapping::operator!=(const MidiDevice *rhs) const {
 }
 
 void InputMapping::onMidiData(MidiDevice *device, MidiMessage *message) {
-  // TODO: Iterate through live mappings, read, write, delete, repeat
-  //  - read message from input
-  //  - loop through mappings
-  //  - check result of mapping->process()
-  //  - if should broadcast, send to broadcast()
-  //  - delete the MidiMessage/Result objects!
-  //  - continue to next input; repeat;
-  Result *result;
   for (auto mapping = mappings_.begin(); mapping != mappings_.end(); ++mapping) {
-    // TODO: send message through Mapping.process(),
-    //  determine if loop should end early or proceed to the next mapping
-    result = (*mapping)->process(message);
-    if (result->shouldBroadcast()) {
-      // broadcast here
-    } else if (result->isConsumed()) {
+    bool consumed = (*mapping)->process(message);
+    if (consumed) {
       break;
     }
   }
-  delete result;
+  delete message;
 }
 
 void InputMapping::process() {

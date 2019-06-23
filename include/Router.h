@@ -9,10 +9,14 @@ namespace dweedee {
 
 class Mapping {
 
+  friend class Result;
   friend class InputMapping;
   friend class Router;
 
-  static std::queue<MidiMessage *> messages;
+  static std::queue<MidiMessage *> processQueueA;
+  static std::queue<MidiMessage *> processQueueB;
+  static std::queue<MidiMessage *> *inputQueue;
+  static std::queue<MidiMessage *> *outputQueue;
 
   std::deque<MidiDevice *> inputs_;
   std::deque<MidiDevice *> outputs_;
@@ -21,7 +25,7 @@ class Mapping {
 
   void broadcast(MidiMessage *message);
   void broadcast(MidiMessage **messages, uint8_t msgCount);
-  Result process(MidiMessage *message);
+  bool process(MidiMessage *message);
 
  public:
   Mapping();

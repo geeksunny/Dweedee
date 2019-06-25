@@ -13,3 +13,9 @@
 [submodule "lib/Arduino-LiquidCrystal-I2C"]
 	path = lib/Arduino-LiquidCrystal-I2C
 	url = git@github.com:fdebrabander/Arduino-LiquidCrystal-I2C-library.git
+[submodule "lib/Arduinojson"]
+	path = lib/Arduinojson
+	url = git@github.com:bblanchon/ArduinoJson.git
+[submodule "lib/SD_Library"]
+	path = lib/SD_Library
+	url = git@github.com:arduino-libraries/SD.git

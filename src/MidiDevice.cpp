@@ -2,6 +2,10 @@
 
 namespace dweedee {
 
+////////////////////////////////////////////////////////////////
+// Class : UsbMidiDevice ///////////////////////////////////////
+////////////////////////////////////////////////////////////////
+
 UsbMidiDevice::UsbMidiDevice(USBH_MIDI *usbMidi, UsbDeviceInfo *deviceInfo)
     : usbMidi_(usbMidi), deviceInfo_(deviceInfo) {
   // TODO : Null checks?
@@ -31,6 +35,10 @@ void UsbMidiDevice::write(MidiMessage *message) {
 uint8_t UsbMidiDevice::getAddress() {
   return deviceInfo_->devAddress;
 }
+
+////////////////////////////////////////////////////////////////
+// Class : SerialMidiDevice ////////////////////////////////////
+////////////////////////////////////////////////////////////////
 
 SerialMidiDevice::SerialMidiDevice(HardwareSerial &serial)
     : serial_(&serial), midi_(midi::MidiInterface<HardwareSerial>((HardwareSerial &) serial)) {

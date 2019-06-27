@@ -10,7 +10,6 @@ class Result {
 
  public:
   Result(bool consumed, bool failed);
-//  ~Result();    // TODO!
   bool isConsumed();
   bool isFailed();
   bool shouldBroadcast();

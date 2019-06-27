@@ -29,7 +29,6 @@ class Mapping {
 
  public:
   Mapping();
-//  ~Mapping();   // TODO!
   bool activate();
   bool deactivate();
   bool isActivated();
@@ -83,7 +82,6 @@ class Router {
   static Router *getInstance();
 
   Router();
-//  ~Router();    // TODO!
   void task();
   void setPaused(bool paused);
   void toggle();

@@ -15,23 +15,41 @@
 
 #define SD_CS_PIN         53 // Uno: 4, 10 | Mega: 53
 #define JSON_BUFFER_SIZE  1024
+#define KEY_LENGTH_MAX    24
 
 namespace dweedee {
 
-class JsonParcel {
- public:
+class JsonParser;
+
+class JsonModel {
+
+  friend class JsonParser;
+
+  virtual void onKey(const char *key, JsonParser &parceler) = 0;
   virtual void serialize() = 0;
   virtual void deserialize(JsonObject &object) = 0;
+
 };
 
-class JsonParceler {
+class JsonParser {
+
+  friend class JsonModel;
+
   DynamicJsonDocument buffer_;
   Stream &src_;
- public:
-  JsonParceler(Stream &src);
+  char keyBuffer_[KEY_LENGTH_MAX + 1];
 
-  template<typename T>
-  typename JSON::enable_if<!JSON::is_base_of<JsonParceler, T>::value, bool>::type parse(T &dest);
+ public:
+  explicit JsonParser(Stream &src);
+  bool parse(JsonModel &dest);
+  bool findNextKey(char *dest);
+  bool readJsonToBuffer(char openChar);
+  bool readObjectToBuffer();
+  bool readArrayToBuffer();
+
+  // TODO: See if this will ever work... should act like Java's <T extends JsonModel>
+//  template <typename T>
+//  typename JSON::enable_if<JSON::is_base_of<JsonModel, T>::value, bool>::type parse(T &dest);
 };
 
 // TODO : Add support for storing binary compressed(?) version of the configuration in EEPROM.

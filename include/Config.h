@@ -5,9 +5,18 @@
 
 namespace dweedee {
 
-class Config {
-  // TODO
+class Config : public JsonModel {
+
+  void onKey(const char *key, JsonParser &parser) override;
+  void serialize() override;
+  void deserialize(JsonObject &object) override;
+
+ public:
+//  Config() = default;
+
 };
+
+Config parseConfigFromSd(const char *filename);
 
 }
 

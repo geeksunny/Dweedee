@@ -26,8 +26,7 @@ class JsonModel {
   friend class JsonParser;
 
   virtual void onKey(const char *key, JsonParser &parceler) = 0;
-  virtual void serialize() = 0;
-  virtual void deserialize(JsonObject &object) = 0;
+//  virtual void serialize() = 0;
 
 };
 

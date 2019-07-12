@@ -2,6 +2,29 @@
 
 namespace dweedee {
 
+////////////////////////////////////////////////////////////////
+// Base Classes : NamedDeque, NamedRecord  /////////////////////
+////////////////////////////////////////////////////////////////
+
+template <typename T>
+NamedRecord<T>::NamedRecord(const char *name) : name_((char *) malloc(strlen(name)+1)) {
+  strcpy(name_, name);
+}
+
+template<typename T>
+NamedRecord<T>::~NamedRecord() {
+  free(name_);
+}
+
+template <typename T>
+bool NamedDeque<T>::matches(const char *&key, const T &value) {
+  return strcmp(key, value.name_) == 0;
+}
+
+////////////////////////////////////////////////////////////////
+// Class : Config  /////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+
 void Config::onKey(const char *key, dweedee::JsonParser &parser) {
   // TODO: use PROG_STR here ?
   if (strcmp(key, "devices") == 0) {
@@ -28,13 +51,15 @@ void Config::onKey(const char *key, dweedee::JsonParser &parser) {
   }
 }
 
-void Config::serialize() {
 
 }
 
-void Config::deserialize(JsonObject &object) {
 
 }
+
+////////////////////////////////////////////////////////////////
+// Functions  //////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
 
 Config parseConfigFromSd(const char *filename) {
   File file = Storage().open(filename);

@@ -51,10 +51,102 @@ void Config::onKey(const char *key, dweedee::JsonParser &parser) {
   }
 }
 
+////////////////////////////////////////////////////////////////
+// Class : DevicesConfig  //////////////////////////////////////
+////////////////////////////////////////////////////////////////
 
+void DevicesConfig::onKey(const char *key, dweedee::JsonParser &parser) {
+  this->push_back(DeviceRecord(key));
+  parser.parse(this->back());
 }
 
+////////////////////////////////////////////////////////////////
+// Class : DeviceRecord  ///////////////////////////////////////
+////////////////////////////////////////////////////////////////
 
+DeviceRecord::DeviceRecord(const char *name) : NamedRecord(name) {
+  // TODO
+}
+
+DeviceRecord::~DeviceRecord() {
+  // TODO: Delete any fields here when implemented
+}
+
+void DeviceRecord::onKey(const char *key, dweedee::JsonParser &parser) {
+  if (strcmp(key, "vid") == 0) {
+    //
+  } else if (strcmp(key, "pid") == 0) {
+    //
+  } else if (strcmp(key, "name") == 0) {  // TODO: IS necessary ?
+    //
+  }
+}
+
+////////////////////////////////////////////////////////////////
+// Class : MappingConfig  //////////////////////////////////////
+////////////////////////////////////////////////////////////////
+
+void MappingConfig::onKey(const char *key, dweedee::JsonParser &parser) {
+  this->push_back(MappingRecord(key));
+  parser.parse(this->back());
+}
+
+////////////////////////////////////////////////////////////////
+// Class : MappingRecord  //////////////////////////////////////
+////////////////////////////////////////////////////////////////
+
+MappingRecord::MappingRecord(const char *name) : NamedRecord(name) {
+  // TODO: Init other fields when implemented
+}
+
+MappingRecord::~MappingRecord() {
+  // TODO: Delete other fields when implemented
+}
+
+void MappingRecord::onKey(const char *key, dweedee::JsonParser &parser) {
+  if (strcmp(key, "inputs") == 0) {
+    // array of input nicknames
+  } else if (strcmp(key, "outputs") == 0) {
+    // array of output nicknames
+  } else if (strcmp(key, "filters") == 0) {
+    // NamedDeque of filter configurations
+  } else if (strcmp(key, "listen") == 0) {
+    // listen to clock, sysex, activeSense messages? is this necessary?
+  }
+}
+
+////////////////////////////////////////////////////////////////
+// Class : ClockConfig  ////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+
+void ClockConfig::onKey(const char *key, dweedee::JsonParser &parser) {
+  if (strcmp(key, "inputs") == 0) {
+    // array of input nicknames
+  } else if (strcmp(key, "outputs") == 0) {
+    // array of output nicknames
+  } else if (strcmp(key, "bpm") == 0) {
+    // beats per minute / tempo, 120
+  } else if (strcmp(key, "ppqn") == 0) {
+    // pulses per quarter note, 24
+  } else if (strcmp(key, "patternLength") == 0) {
+    // int, 16 (sixteenth notes)
+  } else if (strcmp(key, "tapEnabled") == 0) {
+    // true/false
+  } else if (strcmp(key, "analog") == 0) {
+    // analog.volume ?
+  }
+}
+
+////////////////////////////////////////////////////////////////
+// Class : SysexRecord  ////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+
+void SysexRecord::onKey(const char *key, dweedee::JsonParser &parser) {
+  if (strcmp(key, "path") == 0) {
+    // File path
+  } else if (strcmp(key, "output") == 0) {
+    // Nickname of output device
+  }
 }
 
 ////////////////////////////////////////////////////////////////

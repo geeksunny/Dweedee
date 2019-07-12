@@ -26,9 +26,64 @@ class NamedRecord {
 };
 
 ///////////////////////
+// Config subclasses //
+
+class DeviceRecord : public JsonModel, public NamedRecord<DeviceRecord> {
+
+  friend class DevicesConfig;
+
+  char *vid_{};
+  char *pid_{};
+  // TODO: should device manufacturer strings be allowed as alternative?
+
+  void onKey(const char *key, JsonParser &parser) override;
+//  void serialize() override;
+ public:
+  DeviceRecord(const char *name);
+  virtual ~DeviceRecord();
+};
+
+class DevicesConfig : public JsonModel, NamedDeque<DeviceRecord> {
+  void onKey(const char *key, JsonParser &parser) override;
+//  void serialize() override;
+};
+
+class MappingRecord : public JsonModel, public NamedRecord<MappingRecord> {
+
+  friend class MappingConfig;
+
+  // TODO: Add other fields
+ public:
+  MappingRecord(const char *name);
+  ~MappingRecord();
+
+  void onKey(const char *key, JsonParser &parser) override;
+//  void serialize() override;
+};
+
+class MappingConfig : public JsonModel, NamedDeque<MappingRecord> {
+  void onKey(const char *key, JsonParser &parser) override;
+//  void serialize() override;
+};
+
+class ClockConfig : public JsonModel {
+  void onKey(const char *key, JsonParser &parser) override;
+//  void serialize() override;
+};
+
+class SysexRecord : public JsonModel {
+  void onKey(const char *key, JsonParser &parser) override;
+//  void serialize() override;
+};
+
+///////////////////////
 // Base config class //
 
 class Config : public JsonModel {
+
+  DevicesConfig devices;
+  MappingConfig mappings;
+  std::deque<SysexRecord> sysex;
 
   void onKey(const char *key, JsonParser &parser) override;
 //  void serialize() override;

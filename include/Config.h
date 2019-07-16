@@ -36,7 +36,7 @@ class DeviceRecord : public JsonModel, public NamedRecord<DeviceRecord> {
   char *pid_{};
   // TODO: should device manufacturer strings be allowed as alternative?
 
-  void onKey(const char *key, JsonParser &parser) override;
+  void onKey(const char *key, JsonFileParser &parser) override;
 //  void serialize() override;
  public:
   DeviceRecord(const char *name);
@@ -44,7 +44,7 @@ class DeviceRecord : public JsonModel, public NamedRecord<DeviceRecord> {
 };
 
 class DevicesConfig : public JsonModel, NamedDeque<DeviceRecord> {
-  void onKey(const char *key, JsonParser &parser) override;
+  void onKey(const char *key, JsonFileParser &parser) override;
 //  void serialize() override;
 };
 
@@ -57,22 +57,22 @@ class MappingRecord : public JsonModel, public NamedRecord<MappingRecord> {
   MappingRecord(const char *name);
   ~MappingRecord();
 
-  void onKey(const char *key, JsonParser &parser) override;
+  void onKey(const char *key, JsonFileParser &parser) override;
 //  void serialize() override;
 };
 
 class MappingConfig : public JsonModel, NamedDeque<MappingRecord> {
-  void onKey(const char *key, JsonParser &parser) override;
+  void onKey(const char *key, JsonFileParser &parser) override;
 //  void serialize() override;
 };
 
 class ClockConfig : public JsonModel {
-  void onKey(const char *key, JsonParser &parser) override;
+  void onKey(const char *key, JsonFileParser &parser) override;
 //  void serialize() override;
 };
 
 class SysexRecord : public JsonModel {
-  void onKey(const char *key, JsonParser &parser) override;
+  void onKey(const char *key, JsonFileParser &parser) override;
 //  void serialize() override;
 };
 
@@ -81,11 +81,11 @@ class SysexRecord : public JsonModel {
 
 class Config : public JsonModel {
 
-  DevicesConfig devices;
-  MappingConfig mappings;
-  std::deque<SysexRecord> sysex;
+  DevicesConfig devices_;
+  MappingConfig mappings_;
+  std::deque<SysexRecord> sysex_;
 
-  void onKey(const char *key, JsonParser &parser) override;
+  void onKey(const char *key, JsonFileParser &parser) override;
 //  void serialize() override;
 
  public:

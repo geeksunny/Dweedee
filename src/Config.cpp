@@ -25,7 +25,7 @@ bool NamedDeque<T>::matches(const char *&key, const T &value) {
 // Class : Config  /////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 
-void Config::onKey(const char *key, dweedee::JsonParser &parser) {
+void Config::onKey(const char *key, dweedee::JsonFileParser &parser) {
   // TODO: use PROG_STR here ?
   if (strcmp(key, "devices") == 0) {
     parser.readObjectToBuffer();
@@ -55,7 +55,7 @@ void Config::onKey(const char *key, dweedee::JsonParser &parser) {
 // Class : DevicesConfig  //////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 
-void DevicesConfig::onKey(const char *key, dweedee::JsonParser &parser) {
+void DevicesConfig::onKey(const char *key, dweedee::JsonFileParser &parser) {
   this->push_back(DeviceRecord(key));
   parser.parse(this->back());
 }
@@ -72,12 +72,10 @@ DeviceRecord::~DeviceRecord() {
   // TODO: Delete any fields here when implemented
 }
 
-void DeviceRecord::onKey(const char *key, dweedee::JsonParser &parser) {
+void DeviceRecord::onKey(const char *key, dweedee::JsonFileParser &parser) {
   if (strcmp(key, "vid") == 0) {
     //
   } else if (strcmp(key, "pid") == 0) {
-    //
-  } else if (strcmp(key, "name") == 0) {  // TODO: IS necessary ?
     //
   }
 }
@@ -86,7 +84,7 @@ void DeviceRecord::onKey(const char *key, dweedee::JsonParser &parser) {
 // Class : MappingConfig  //////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 
-void MappingConfig::onKey(const char *key, dweedee::JsonParser &parser) {
+void MappingConfig::onKey(const char *key, dweedee::JsonFileParser &parser) {
   this->push_back(MappingRecord(key));
   parser.parse(this->back());
 }
@@ -103,8 +101,8 @@ MappingRecord::~MappingRecord() {
   // TODO: Delete other fields when implemented
 }
 
-void MappingRecord::onKey(const char *key, dweedee::JsonParser &parser) {
   if (strcmp(key, "inputs") == 0) {
+void MappingRecord::onKey(const char *key, dweedee::JsonFileParser &parser) {
     // array of input nicknames
   } else if (strcmp(key, "outputs") == 0) {
     // array of output nicknames
@@ -119,8 +117,8 @@ void MappingRecord::onKey(const char *key, dweedee::JsonParser &parser) {
 // Class : ClockConfig  ////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 
-void ClockConfig::onKey(const char *key, dweedee::JsonParser &parser) {
   if (strcmp(key, "inputs") == 0) {
+void ClockConfig::onKey(const char *key, dweedee::JsonFileParser &parser) {
     // array of input nicknames
   } else if (strcmp(key, "outputs") == 0) {
     // array of output nicknames
@@ -141,8 +139,8 @@ void ClockConfig::onKey(const char *key, dweedee::JsonParser &parser) {
 // Class : SysexRecord  ////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 
-void SysexRecord::onKey(const char *key, dweedee::JsonParser &parser) {
   if (strcmp(key, "path") == 0) {
+void SysexRecord::onKey(const char *key, dweedee::JsonFileParser &parser) {
     // File path
   } else if (strcmp(key, "output") == 0) {
     // Nickname of output device
@@ -159,7 +157,7 @@ Config parseConfigFromSd(const char *filename) {
     // file is an invalid stream, we cannot continue.
     // TODO: Return Config{} ?
   }
-  JsonParser parser(file);
+  JsonFileParser parser(file);
   Config config;
   // TODO : No dynamic cast needed here? dynamic_cast<dweedee::JsonModel &>(config)
   bool result = parser.parse(config);

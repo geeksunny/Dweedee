@@ -19,32 +19,33 @@
 
 namespace dweedee {
 
-class JsonParser;
+class JsonFileParser;
 
 class JsonModel {
 
-  friend class JsonParser;
+  friend class JsonFileParser;
 
-  virtual void onKey(const char *key, JsonParser &parceler) = 0;
+  virtual void onKey(const char *key, JsonFileParser &parceler) = 0;
 //  virtual void serialize() = 0;
 
 };
 
-class JsonParser {
+class JsonFileParser {
 
   friend class JsonModel;
 
   DynamicJsonDocument buffer_;
-  Stream &src_;
+  File &src_;
   char keyBuffer_[KEY_LENGTH_MAX + 1];
 
  public:
-  explicit JsonParser(Stream &src);
+  explicit JsonFileParser(File &src);
   bool parse(JsonModel &dest);
-  bool findNextKey(char *dest);
+  bool findNextKey(char *dest, int maxLength);
   bool readJsonToBuffer(char openChar);
   bool readObjectToBuffer();
   bool readArrayToBuffer();
+  bool getString(char* dest);
 
   // TODO: See if this will ever work... should act like Java's <T extends JsonModel>
 //  template <typename T>

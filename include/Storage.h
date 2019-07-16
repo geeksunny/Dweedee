@@ -47,9 +47,6 @@ class JsonFileParser {
   bool readArrayToBuffer();
   bool getString(char* dest);
 
-  // TODO: See if this will ever work... should act like Java's <T extends JsonModel>
-//  template <typename T>
-//  typename JSON::enable_if<JSON::is_base_of<JsonModel, T>::value, bool>::type parse(T &dest);
 };
 
 // TODO : Add support for storing binary compressed(?) version of the configuration in EEPROM.

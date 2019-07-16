@@ -18,7 +18,7 @@ NamedRecord<T>::~NamedRecord() {
 
 template <typename T>
 bool NamedDeque<T>::matches(const char *&key, const T &value) {
-  return strcmp(key, value.name_) == 0;
+  return STR_EQ(key, value.name_);
 }
 
 ////////////////////////////////////////////////////////////////
@@ -27,22 +27,20 @@ bool NamedDeque<T>::matches(const char *&key, const T &value) {
 
 void Config::onKey(const char *key, dweedee::JsonFileParser &parser) {
   // TODO: use PROG_STR here ?
-  if (strcmp(key, "devices") == 0) {
-    parser.readObjectToBuffer();
-    // TODO: Do stuff with buffer
-  } else if (strcmp(key, "ignore") == 0) {
+  if (STR_EQ(key, "devices")) {
+    parser.parse(devices_);
+  } else if (STR_EQ(key, "ignore")) {
     parser.readArrayToBuffer();
     // TODO: Do stuff with buffer
-  } else if (strcmp(key, "mappings") == 0) {
+  } else if (STR_EQ(key, "mappings")) {
+    parser.parse(mappings_);
+  } else if (STR_EQ(key, "clock")) {
     parser.readObjectToBuffer();
     // TODO: Do stuff with buffer
-  } else if (strcmp(key, "clock") == 0) {
-    parser.readObjectToBuffer();
-    // TODO: Do stuff with buffer
-  } else if (strcmp(key, "sysex") == 0) {
-    parser.readObjectToBuffer();
-    // TODO: Do stuff with buffer
-  } else if (strcmp(key, "options") == 0) {
+  } else if (STR_EQ(key, "sysex")) {
+    parser.readArrayToBuffer();
+    // TODO: Parse array of SysexRecord objects, store in sysex_
+  } else if (STR_EQ(key, "options")) {
     parser.readObjectToBuffer();
     // TODO: Do stuff with buffer
   } else {
@@ -73,10 +71,10 @@ DeviceRecord::~DeviceRecord() {
 }
 
 void DeviceRecord::onKey(const char *key, dweedee::JsonFileParser &parser) {
-  if (strcmp(key, "vid") == 0) {
-    //
-  } else if (strcmp(key, "pid") == 0) {
-    //
+  if (STR_EQ(key, "vid")) {
+    parser.getString(vid_);
+  } else if (STR_EQ(key, "pid")) {
+    parser.getString(pid_);
   }
 }
 
@@ -101,14 +99,14 @@ MappingRecord::~MappingRecord() {
   // TODO: Delete other fields when implemented
 }
 
-  if (strcmp(key, "inputs") == 0) {
 void MappingRecord::onKey(const char *key, dweedee::JsonFileParser &parser) {
+  if (STR_EQ(key, "inputs")) {
     // array of input nicknames
-  } else if (strcmp(key, "outputs") == 0) {
+  } else if (STR_EQ(key, "outputs")) {
     // array of output nicknames
-  } else if (strcmp(key, "filters") == 0) {
+  } else if (STR_EQ(key, "filters")) {
     // NamedDeque of filter configurations
-  } else if (strcmp(key, "listen") == 0) {
+  } else if (STR_EQ(key, "listen")) {
     // listen to clock, sysex, activeSense messages? is this necessary?
   }
 }
@@ -117,20 +115,20 @@ void MappingRecord::onKey(const char *key, dweedee::JsonFileParser &parser) {
 // Class : ClockConfig  ////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 
-  if (strcmp(key, "inputs") == 0) {
 void ClockConfig::onKey(const char *key, dweedee::JsonFileParser &parser) {
+  if (STR_EQ(key, "inputs")) {
     // array of input nicknames
-  } else if (strcmp(key, "outputs") == 0) {
+  } else if (STR_EQ(key, "outputs")) {
     // array of output nicknames
-  } else if (strcmp(key, "bpm") == 0) {
+  } else if (STR_EQ(key, "bpm")) {
     // beats per minute / tempo, 120
-  } else if (strcmp(key, "ppqn") == 0) {
+  } else if (STR_EQ(key, "ppqn")) {
     // pulses per quarter note, 24
-  } else if (strcmp(key, "patternLength") == 0) {
+  } else if (STR_EQ(key, "patternLength")) {
     // int, 16 (sixteenth notes)
-  } else if (strcmp(key, "tapEnabled") == 0) {
+  } else if (STR_EQ(key, "tapEnabled")) {
     // true/false
-  } else if (strcmp(key, "analog") == 0) {
+  } else if (STR_EQ(key, "analog")) {
     // analog.volume ?
   }
 }
@@ -139,10 +137,11 @@ void ClockConfig::onKey(const char *key, dweedee::JsonFileParser &parser) {
 // Class : SysexRecord  ////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 
-  if (strcmp(key, "path") == 0) {
 void SysexRecord::onKey(const char *key, dweedee::JsonFileParser &parser) {
+  if (STR_EQ(key, "path")) {
     // File path
-  } else if (strcmp(key, "output") == 0) {
+    parser.getString(path_);
+  } else if (STR_EQ(key, "output")) {
     // Nickname of output device
   }
 }

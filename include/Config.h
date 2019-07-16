@@ -4,6 +4,8 @@
 #include "Deques.h"
 #include "Storage.h"
 
+#define STR_EQ(StrA, StrB)  (strcmp(StrA, StrB) == 0)
+
 namespace dweedee {
 
 /////////////////////////
@@ -32,8 +34,8 @@ class DeviceRecord : public JsonModel, public NamedRecord<DeviceRecord> {
 
   friend class DevicesConfig;
 
-  char *vid_{};
-  char *pid_{};
+  char *vid_ = nullptr;
+  char *pid_ = nullptr;
   // TODO: should device manufacturer strings be allowed as alternative?
 
   void onKey(const char *key, JsonFileParser &parser) override;
@@ -72,6 +74,11 @@ class ClockConfig : public JsonModel {
 };
 
 class SysexRecord : public JsonModel {
+
+  // TODO: Consider moving SysexRecord over to a NamedRecord<SysexRecord> in the future
+
+  char *path_ = nullptr;
+
   void onKey(const char *key, JsonFileParser &parser) override;
 //  void serialize() override;
 };

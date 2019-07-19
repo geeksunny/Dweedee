@@ -30,12 +30,14 @@ class NamedRecord {
 ///////////////////////
 // Config subclasses //
 
+// TODO: Keep a static index of nickname pointers to be shared between models
+
 class DeviceRecord : public JsonModel, public NamedRecord<DeviceRecord> {
 
   friend class DevicesConfig;
 
-  char *vid_ = nullptr;
-  char *pid_ = nullptr;
+  int vid_;
+  int pid_;
   // TODO: should device manufacturer strings be allowed as alternative?
 
   void onKey(const char *key, JsonFileParser &parser) override;
@@ -43,6 +45,7 @@ class DeviceRecord : public JsonModel, public NamedRecord<DeviceRecord> {
  public:
   DeviceRecord(const char *name);
   virtual ~DeviceRecord();
+
 };
 
 class DevicesConfig : public JsonModel, NamedDeque<DeviceRecord> {
@@ -54,13 +57,17 @@ class MappingRecord : public JsonModel, public NamedRecord<MappingRecord> {
 
   friend class MappingConfig;
 
-  // TODO: Add other fields
+  std::deque<char *> inputs_;
+  std::deque<char *> outputs_;
+  // TODO: Filter config blocks under "filters" field
+
+  void onKey(const char *key, JsonFileParser &parser) override;
+//  void serialize() override;
+
  public:
   MappingRecord(const char *name);
   ~MappingRecord();
 
-  void onKey(const char *key, JsonFileParser &parser) override;
-//  void serialize() override;
 };
 
 class MappingConfig : public JsonModel, NamedDeque<MappingRecord> {
@@ -69,8 +76,18 @@ class MappingConfig : public JsonModel, NamedDeque<MappingRecord> {
 };
 
 class ClockConfig : public JsonModel {
+
+  std::deque<char *> inputs_;
+  std::deque<char *> outputs_;
+  int bpm_;
+  int ppqn_;
+  int patternLength_;
+  bool tapEnabled_;
+  // Analog / Analog.volume
+
   void onKey(const char *key, JsonFileParser &parser) override;
 //  void serialize() override;
+
 };
 
 class SysexRecord : public JsonModel {
@@ -81,6 +98,10 @@ class SysexRecord : public JsonModel {
 
   void onKey(const char *key, JsonFileParser &parser) override;
 //  void serialize() override;
+
+ public:
+  ~SysexRecord();
+
 };
 
 ///////////////////////
@@ -89,7 +110,9 @@ class SysexRecord : public JsonModel {
 class Config : public JsonModel {
 
   DevicesConfig devices_;
+  std::deque<char *> ignore_;
   MappingConfig mappings_;
+  ClockConfig clock_;
   std::deque<SysexRecord> sysex_;
 
   void onKey(const char *key, JsonFileParser &parser) override;
@@ -97,6 +120,7 @@ class Config : public JsonModel {
 
  public:
 //  Config() = default;
+  ~Config();
 
 };
 

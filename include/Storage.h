@@ -6,6 +6,7 @@
 #include <SD.h>
 #include <avr/pgmspace.h>
 #include <WString.h>
+#include <deque>
 
 #define JSON ARDUINOJSON_NAMESPACE
 
@@ -45,7 +46,12 @@ class JsonFileParser {
   bool readJsonToBuffer(char openChar);
   bool readObjectToBuffer();
   bool readArrayToBuffer();
-  bool getString(char* dest);
+  bool findArray();
+  bool getBool(bool &dest);
+  bool getHex(int &dest);
+  bool getInt(int &dest);
+  bool getString(char *dest);
+  bool getStringArray(std::deque<char *> &dest);
 
 };
 

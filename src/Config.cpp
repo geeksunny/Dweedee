@@ -2,6 +2,14 @@
 
 namespace dweedee {
 
+template <typename T>
+void freeAndClear(std::deque<T *> &deque) {
+  for (auto it = deque.begin(); it != deque.end(); /* it moved by .erase()*/) {
+    free(*it);
+    it = deque.erase(it);
+  }
+}
+
 ////////////////////////////////////////////////////////////////
 // Base Classes : NamedDeque, NamedRecord  /////////////////////
 ////////////////////////////////////////////////////////////////
@@ -25,18 +33,20 @@ bool NamedDeque<T>::matches(const char *&key, const T &value) {
 // Class : Config  /////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 
+Config::~Config() {
+  freeAndClear(ignore_);
+}
+
 void Config::onKey(const char *key, dweedee::JsonFileParser &parser) {
   // TODO: use PROG_STR here ?
   if (STR_EQ(key, "devices")) {
     parser.parse(devices_);
   } else if (STR_EQ(key, "ignore")) {
-    parser.readArrayToBuffer();
-    // TODO: Do stuff with buffer
+    parser.getStringArray(ignore_);
   } else if (STR_EQ(key, "mappings")) {
     parser.parse(mappings_);
   } else if (STR_EQ(key, "clock")) {
-    parser.readObjectToBuffer();
-    // TODO: Do stuff with buffer
+    parser.parse(clock_);
   } else if (STR_EQ(key, "sysex")) {
     parser.readArrayToBuffer();
     // TODO: Parse array of SysexRecord objects, store in sysex_
@@ -63,18 +73,20 @@ void DevicesConfig::onKey(const char *key, dweedee::JsonFileParser &parser) {
 ////////////////////////////////////////////////////////////////
 
 DeviceRecord::DeviceRecord(const char *name) : NamedRecord(name) {
-  // TODO
+  //
 }
 
 DeviceRecord::~DeviceRecord() {
-  // TODO: Delete any fields here when implemented
+  //
 }
 
 void DeviceRecord::onKey(const char *key, dweedee::JsonFileParser &parser) {
   if (STR_EQ(key, "vid")) {
-    parser.getString(vid_);
+    // Vendor ID
+    parser.getHex(vid_);
   } else if (STR_EQ(key, "pid")) {
-    parser.getString(pid_);
+    // Product ID
+    parser.getHex(pid_);
   }
 }
 
@@ -92,18 +104,22 @@ void MappingConfig::onKey(const char *key, dweedee::JsonFileParser &parser) {
 ////////////////////////////////////////////////////////////////
 
 MappingRecord::MappingRecord(const char *name) : NamedRecord(name) {
-  // TODO: Init other fields when implemented
+  //
 }
 
 MappingRecord::~MappingRecord() {
   // TODO: Delete other fields when implemented
+  freeAndClear(inputs_);
+  freeAndClear(outputs_);
 }
 
 void MappingRecord::onKey(const char *key, dweedee::JsonFileParser &parser) {
   if (STR_EQ(key, "inputs")) {
     // array of input nicknames
+    parser.getStringArray(inputs_);
   } else if (STR_EQ(key, "outputs")) {
     // array of output nicknames
+    parser.getStringArray(outputs_);
   } else if (STR_EQ(key, "filters")) {
     // NamedDeque of filter configurations
   } else if (STR_EQ(key, "listen")) {
@@ -118,16 +134,21 @@ void MappingRecord::onKey(const char *key, dweedee::JsonFileParser &parser) {
 void ClockConfig::onKey(const char *key, dweedee::JsonFileParser &parser) {
   if (STR_EQ(key, "inputs")) {
     // array of input nicknames
+    parser.getStringArray(inputs_);
   } else if (STR_EQ(key, "outputs")) {
     // array of output nicknames
+    parser.getStringArray(outputs_);
   } else if (STR_EQ(key, "bpm")) {
-    // beats per minute / tempo, 120
+    // beats per minute / tempo
+    parser.getInt(bpm_);
   } else if (STR_EQ(key, "ppqn")) {
-    // pulses per quarter note, 24
+    // pulses per quarter note
+    parser.getInt(ppqn_);
   } else if (STR_EQ(key, "patternLength")) {
-    // int, 16 (sixteenth notes)
+    // pattern length, in sixteenth notes
+    parser.getInt(patternLength_);
   } else if (STR_EQ(key, "tapEnabled")) {
-    // true/false
+    parser.getBool(tapEnabled_);
   } else if (STR_EQ(key, "analog")) {
     // analog.volume ?
   }
@@ -136,6 +157,10 @@ void ClockConfig::onKey(const char *key, dweedee::JsonFileParser &parser) {
 ////////////////////////////////////////////////////////////////
 // Class : SysexRecord  ////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
+
+SysexRecord::~SysexRecord() {
+  free(path_);
+}
 
 void SysexRecord::onKey(const char *key, dweedee::JsonFileParser &parser) {
   if (STR_EQ(key, "path")) {
@@ -152,9 +177,9 @@ void SysexRecord::onKey(const char *key, dweedee::JsonFileParser &parser) {
 
 Config parseConfigFromSd(const char *filename) {
   File file = Storage().open(filename);
-  if (file.position() == -1) {  // TODO: Will this work for validity check?
+  if (file.position() == (uint32_t) -1) {
     // file is an invalid stream, we cannot continue.
-    // TODO: Return Config{} ?
+    return Config{};
   }
   JsonFileParser parser(file);
   Config config;

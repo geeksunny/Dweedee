@@ -40,7 +40,7 @@ bool JsonFileParser::findNextKey(char *dest, int maxLength) {
       ignoreNext = false;
     }
   }
-  // Reached end of KEY_LENGTH_MAX before setting null terminator. Setting it here.
+  // Reached end of maxLength before setting null terminator. Setting it here.
   dest[maxLength] = '\0';
   return true;
 }
@@ -64,6 +64,39 @@ bool JsonFileParser::readObjectToBuffer() {
 
 bool JsonFileParser::readArrayToBuffer() {
   return readJsonToBuffer('[');
+}
+
+bool JsonFileParser::findArray() {
+  int srcStartPos = src_.position();
+  while (src_.available()) {
+    switch (src_.read()) {
+      case '[':
+        return true;
+      case ']':
+      case '{':
+      case ',':
+        goto ARRAY_NOT_FOUND;
+    }
+  }
+  ARRAY_NOT_FOUND:
+  src_.seek(srcStartPos);
+  return false;
+}
+
+bool JsonFileParser::getBool(bool &dest) {
+  // TODO: Look for characters (true/false) OR digit (0/1)
+  return false;
+}
+
+bool JsonFileParser::getHex(int &dest) {
+  // TODO: Look for digits, bail on invalid char (return 0? return -1?)
+  //  use <sstream>
+  return false;
+}
+
+bool JsonFileParser::getInt(int &dest) {
+  // TODO: Look for digits, bail on invalid char (return 0? return -1?)
+  return false;
 }
 
 bool JsonFileParser::getString(char *dest) {
@@ -134,6 +167,30 @@ bool JsonFileParser::getString(char *dest) {
   }
   // String not found; Reset stream position
   src_.seek(srcStartPos);
+  return false;
+}
+
+bool JsonFileParser::getStringArray(std::deque<char *> &dest) {
+  // approach opening bracket
+  if (findArray()) {
+    // get string until false result
+    bool result;
+    do {
+      char *str;
+      result = getString(str);
+      if (result) {
+        dest.push_back(str);
+      }
+    } while (result);
+    // verify closing bracket
+    int srcStartPos = src_.position();
+    while (src_.available()) {
+      if (src_.read() == ']') {
+        return true;
+      }
+    }
+    src_.seek(srcStartPos);
+  }
   return false;
 }
 

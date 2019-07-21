@@ -48,10 +48,37 @@ class JsonFileParser {
   bool readArrayToBuffer();
   bool findArray();
   bool getBool(bool &dest);
-  bool getHex(int &dest);
+  bool getHexString(int &dest);
   bool getInt(int &dest);
   bool getString(char *dest);
   bool getStringArray(std::deque<char *> &dest);
+
+  bool peekUntil(char until, bool escape = false);
+  bool readUntil(char until, char *dest, bool escape = false);
+
+  // Included in header file due to compilation errors related to templating.
+  template <typename T>
+  bool getObjectArray(std::deque<T> &dest) {
+    if (findArray()) {
+      bool result;
+      do {
+        T obj;
+        result = parse(obj);
+        if (result) {
+          dest.push_back(obj);
+        }
+      } while (result);
+      // verify closing bracket
+      int srcStartPos = src_.position();
+      while (src_.available()) {
+        if (src_.read() == ']') {
+          return true;
+        }
+      }
+      src_.seek(srcStartPos);
+    }
+    return false;
+  }
 
 };
 

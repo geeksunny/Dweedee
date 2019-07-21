@@ -60,6 +60,7 @@ class MappingRecord : public JsonModel, public NamedRecord<MappingRecord> {
   std::deque<char *> inputs_;
   std::deque<char *> outputs_;
   // TODO: Filter config blocks under "filters" field
+  // TODO: should "listen" block still be used? {clock:bool, sysex:bool, activeSense:bool}
 
   void onKey(const char *key, JsonFileParser &parser) override;
 //  void serialize() override;
@@ -95,6 +96,7 @@ class SysexRecord : public JsonModel {
   // TODO: Consider moving SysexRecord over to a NamedRecord<SysexRecord> in the future
 
   char *path_ = nullptr;
+  char *output_ = nullptr;
 
   void onKey(const char *key, JsonFileParser &parser) override;
 //  void serialize() override;

@@ -1,4 +1,5 @@
 #include "Storage.h"
+#include <ctype.h>
 
 namespace dweedee {
 
@@ -84,13 +85,11 @@ bool JsonFileParser::findArray() {
 }
 
 bool JsonFileParser::getBool(bool &dest) {
-  // TODO: Look for characters (true/false) OR digit (0/1)
+  // TODO: Look for characters (true/false/"true"/"false") OR digit (0/1)
   return false;
 }
 
-bool JsonFileParser::getHex(int &dest) {
-  // TODO: Look for digits, bail on invalid char (return 0? return -1?)
-  //  use <sstream>
+bool JsonFileParser::getHexString(int &dest) {
   return false;
 }
 
@@ -101,73 +100,23 @@ bool JsonFileParser::getInt(int &dest) {
 
 bool JsonFileParser::getString(char *dest) {
   int srcStartPos = src_.position();
-  int strPos = -1;
-  int strLen = 0;
-  bool ignoreNext = false;
+  char next;
+  bool success = false;
   // Find string, get length. Bail if we think the next value is not a string.
   while (src_.available()) {
-    if (ignoreNext) {
-      src_.read();
-      ++strLen;
-      ignoreNext = false;
-      continue;
-    }
-    switch (src_.peek()) {
-      case '.':
-      case ',':
-      case '{':
-      case '[':
-      case '}':
-      case ']':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9':
-      case '0':
-        // Invalid character - bail!
-        src_.seek(srcStartPos);
-        return false;
-      case '"':
-        if (strPos == -1) {
-          // Beginning of string
-          src_.read();
-          strPos = src_.position();
-        } else {
-          // End of string
-          goto STRING_LOOP;
-        }
-        break;
-      case '\\':
-        // Escape character - skip inspection of next character
-        ignoreNext = true;
-        // Fall through
-      default:
-        src_.read();
-        if (strPos != -1) {
-          ++strLen;
-        }
-        break;
+    next = src_.read();
+    if (next == '"') {
+      success = readUntil('"', dest, true);
+      break;
+    } else if (!isspace(next) && next != ':') {
+      break;
     }
   }
-  STRING_LOOP:
-  if (strPos > -1) {
-    // Store the string in dest pointer
-    dest = (char *) malloc(strLen + 1);
-    src_.seek(strPos);
-    for (strPos = 0; strPos < strLen; ++strPos) {
-      dest[strPos] = src_.read();
-    }
-    dest[strPos] = '\0';
-    return true;
+  if (!success) {
+    // String not found; Reset stream position
+    src_.seek(srcStartPos);
   }
-  // String not found; Reset stream position
-  src_.seek(srcStartPos);
-  return false;
+  return success;
 }
 
 bool JsonFileParser::getStringArray(std::deque<char *> &dest) {
@@ -192,6 +141,60 @@ bool JsonFileParser::getStringArray(std::deque<char *> &dest) {
     src_.seek(srcStartPos);
   }
   return false;
+}
+
+bool JsonFileParser::peekUntil(char until, bool escape) {
+  int srcStartPos = src_.position();
+  bool isEscaped = false;
+  char next;
+  while (src_.available()) {
+    if (isEscaped) {
+      src_.read();
+      isEscaped = false;
+      continue;
+    }
+    next = src_.peek();
+    if (escape && next == '\\') {
+      isEscaped = true;
+    } else if (next == until) {
+      return true;
+    }
+    src_.read();
+  }
+  src_.seek(srcStartPos);
+  return false;
+}
+
+bool JsonFileParser::readUntil(char until, char *dest, bool escape) {
+  int srcStartPos = src_.position();
+  bool isEscaped = false;
+  int strLen = 0;
+  char next;
+  // Read ahead to get string length.
+  while (src_.available()) {
+    next = src_.read();
+    if (isEscaped) {
+      isEscaped = false;
+    } else if (escape && next == '\\') {
+      isEscaped = true;
+    } else if (next == until) {
+      break;
+    }
+    ++strLen;
+  }
+  // Consider a zero-length string an error result.
+  if (strLen == 0) {
+    src_.seek(srcStartPos);
+    return false;
+  }
+  // Read string to dest pointer.
+  src_.seek(srcStartPos);
+  dest = (char *) malloc(strLen + 1);
+  for (int i = 0; i < strLen; ++i) {
+    dest[i] = src_.read();
+  }
+  dest[strLen] = '\0';
+  return true;
 }
 
 ////////////////////////////////////////////////////////////////

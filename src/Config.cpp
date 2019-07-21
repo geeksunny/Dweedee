@@ -48,8 +48,7 @@ void Config::onKey(const char *key, dweedee::JsonFileParser &parser) {
   } else if (STR_EQ(key, "clock")) {
     parser.parse(clock_);
   } else if (STR_EQ(key, "sysex")) {
-    parser.readArrayToBuffer();
-    // TODO: Parse array of SysexRecord objects, store in sysex_
+    parser.getObjectArray(sysex_);
   } else if (STR_EQ(key, "options")) {
     parser.readObjectToBuffer();
     // TODO: Do stuff with buffer
@@ -83,10 +82,10 @@ DeviceRecord::~DeviceRecord() {
 void DeviceRecord::onKey(const char *key, dweedee::JsonFileParser &parser) {
   if (STR_EQ(key, "vid")) {
     // Vendor ID
-    parser.getHex(vid_);
+    parser.getHexString(vid_);
   } else if (STR_EQ(key, "pid")) {
     // Product ID
-    parser.getHex(pid_);
+    parser.getHexString(pid_);
   }
 }
 
@@ -122,8 +121,10 @@ void MappingRecord::onKey(const char *key, dweedee::JsonFileParser &parser) {
     parser.getStringArray(outputs_);
   } else if (STR_EQ(key, "filters")) {
     // NamedDeque of filter configurations
+    // TODO: Implement Filter configuration parsing
   } else if (STR_EQ(key, "listen")) {
-    // listen to clock, sysex, activeSense messages? is this necessary?
+    // listen to clock, sysex, activeSense messages
+    // TODO: is this necessary?
   }
 }
 
@@ -160,6 +161,7 @@ void ClockConfig::onKey(const char *key, dweedee::JsonFileParser &parser) {
 
 SysexRecord::~SysexRecord() {
   free(path_);
+  free(output_);
 }
 
 void SysexRecord::onKey(const char *key, dweedee::JsonFileParser &parser) {
@@ -168,6 +170,7 @@ void SysexRecord::onKey(const char *key, dweedee::JsonFileParser &parser) {
     parser.getString(path_);
   } else if (STR_EQ(key, "output")) {
     // Nickname of output device
+    parser.getString(output_);
   }
 }
 

@@ -8,7 +8,7 @@ namespace dweedee {
 // Class : JsonFileParser  /////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 
-JsonFileParser::JsonFileParser(File &src) : buffer_(DynamicJsonDocument(JSON_BUFFER_SIZE)), src_(src), keyBuffer_{} {
+JsonFileParser::JsonFileParser(File &src) : src_(src), keyBuffer_{} {
   //
 }
 
@@ -45,27 +45,6 @@ bool JsonFileParser::findNextKey(char *dest, int maxLength) {
   // Reached end of maxLength before setting null terminator. Setting it here.
   dest[maxLength] = '\0';
   return true;
-}
-
-bool JsonFileParser::readJsonToBuffer(const char openChar) {
-  char c;
-  while (src_.available()) {
-    c = src_.peek();
-    if (c == openChar) {
-      DeserializationError result = deserializeJson(buffer_, src_);
-      return (result.code() == DeserializationError::Ok);
-    }
-    src_.read();
-  }
-  return false;
-}
-
-bool JsonFileParser::readObjectToBuffer() {
-  return readJsonToBuffer('{');
-}
-
-bool JsonFileParser::readArrayToBuffer() {
-  return readJsonToBuffer('[');
 }
 
 bool JsonFileParser::findArray() {

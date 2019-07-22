@@ -1,7 +1,6 @@
 #ifndef DWEEDEE_STORAGE_H
 #define DWEEDEE_STORAGE_H
 
-#include <ArduinoJson.h>
 #include <SPI.h>
 #include <SD.h>
 #include <avr/pgmspace.h>
@@ -35,7 +34,6 @@ class JsonFileParser {
 
   friend class JsonModel;
 
-  DynamicJsonDocument buffer_;
   File &src_;
   char keyBuffer_[KEY_LENGTH_MAX + 1];
 
@@ -43,16 +41,12 @@ class JsonFileParser {
   explicit JsonFileParser(File &src);
   bool parse(JsonModel &dest);
   bool findNextKey(char *dest, int maxLength);
-  bool readJsonToBuffer(char openChar);
-  bool readObjectToBuffer();
-  bool readArrayToBuffer();
   bool findArray();
   bool getBool(bool &dest);
   bool getHexString(int &dest);
   bool getInt(int &dest);
   bool getString(char *dest);
   bool getStringArray(std::deque<char *> &dest);
-
   bool peekUntil(char until, bool escape = false);
   bool readUntil(char until, char *dest, bool escape = false);
   bool readMatches(const char *value, bool caseSensitive = true);

@@ -53,14 +53,34 @@ class DevicesConfig : public JsonModel, NamedDeque<DeviceRecord> {
 //  void serialize() override;
 };
 
+class ListenConfig : public JsonModel {
+
+  bool clock_;
+  bool sysex_;
+  bool activeSense_;
+
+  void onKey(const char *key, JsonFileParser &parser) override;
+
+};
+
+class FilterRecord : public JsonModel, public NamedRecord<FilterRecord> {
+  // STUB CLASS - TODO: Build this out
+  void onKey(const char *key, JsonFileParser &parser) override;
+};
+
+class FiltersConfig : public JsonModel, public NamedDeque<FilterRecord> {
+  // STUB CLASS - TODO: Build this out
+  void onKey(const char *key, JsonFileParser &parser) override;
+};
+
 class MappingRecord : public JsonModel, public NamedRecord<MappingRecord> {
 
   friend class MappingConfig;
 
   std::deque<char *> inputs_;
   std::deque<char *> outputs_;
-  // TODO: Filter config blocks under "filters" field
-  // TODO: should "listen" block still be used? {clock:bool, sysex:bool, activeSense:bool}
+  FiltersConfig filters_;
+  ListenConfig listen_;
 
   void onKey(const char *key, JsonFileParser &parser) override;
 //  void serialize() override;
@@ -76,6 +96,14 @@ class MappingConfig : public JsonModel, NamedDeque<MappingRecord> {
 //  void serialize() override;
 };
 
+class AnalogClockConfig : public JsonModel {
+
+  int volume_;
+
+  void onKey(const char *key, JsonFileParser &parser) override;
+
+};
+
 class ClockConfig : public JsonModel {
 
   std::deque<char *> inputs_;
@@ -84,7 +112,7 @@ class ClockConfig : public JsonModel {
   int ppqn_;
   int patternLength_;
   bool tapEnabled_;
-  // Analog / Analog.volume
+  AnalogClockConfig analog_;
 
   void onKey(const char *key, JsonFileParser &parser) override;
 //  void serialize() override;

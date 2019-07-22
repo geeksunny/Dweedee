@@ -144,7 +144,26 @@ bool JsonFileParser::getHexString(int &dest) {
 }
 
 bool JsonFileParser::getInt(int &dest) {
-  // TODO: Look for digits, bail on invalid char (return 0? return -1?)
+  int srcStartPos = src_.position();
+  char next;
+  while (src_.available()) {
+    next = src_.peek();
+    if (isdigit(next)) {
+      dest = src_.parseInt();
+      // Skip to the end of the value, in case a float value is being processed.
+      if (skipValue()) {
+        return true;
+      } else {
+        // Encountered an error with value skip, error result.
+        break;
+      }
+    } else if (!isspace(next) && next != ':') {
+      // Invalid character found before value encountered, error result.
+      break;
+    }
+  }
+  // Didn't find a valid integer value, error result.
+  src_.seek(srcStartPos);
   return false;
 }
 
@@ -264,6 +283,19 @@ bool JsonFileParser::readMatches(const char *value, const bool caseSensitive) {
     }
   }
   return true;
+}
+
+bool JsonFileParser::skipValue() {
+  while (src_.available()) {
+    switch (src_.read()) {
+      case ',':
+      case ']':
+      case '}':
+        return true;
+    }
+  }
+  // Reached the end of the file... error result ?
+  return false;
 }
 
 ////////////////////////////////////////////////////////////////

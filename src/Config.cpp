@@ -50,11 +50,10 @@ void Config::onKey(const char *key, dweedee::JsonFileParser &parser) {
   } else if (STR_EQ(key, "sysex")) {
     parser.getObjectArray(sysex_);
   } else if (STR_EQ(key, "options")) {
-    parser.readObjectToBuffer();
-    // TODO: Do stuff with buffer
+    // TODO: Parse this object
+    parser.skipValue();
   } else {
-    // NOT FOUND
-    // TODO: readObjectOrArray... ?
+    parser.skipValue();
   }
 }
 
@@ -86,6 +85,8 @@ void DeviceRecord::onKey(const char *key, dweedee::JsonFileParser &parser) {
   } else if (STR_EQ(key, "pid")) {
     // Product ID
     parser.getHexString(pid_);
+  } else {
+    parser.skipValue();
   }
 }
 
@@ -121,10 +122,44 @@ void MappingRecord::onKey(const char *key, dweedee::JsonFileParser &parser) {
     parser.getStringArray(outputs_);
   } else if (STR_EQ(key, "filters")) {
     // NamedDeque of filter configurations
-    // TODO: Implement Filter configuration parsing
+    parser.parse(filters_);
   } else if (STR_EQ(key, "listen")) {
     // listen to clock, sysex, activeSense messages
-    // TODO: is this necessary?
+    parser.parse(listen_);
+  }
+}
+
+////////////////////////////////////////////////////////////////
+// Class : FilterRecord  ///////////////////////////////////////
+////////////////////////////////////////////////////////////////
+
+void FilterRecord::onKey(const char *key, JsonFileParser &parser) {
+  // STUB METHOD - TODO: Build this out
+  parser.skipValue();
+}
+
+////////////////////////////////////////////////////////////////
+// Class : FiltersConfig  //////////////////////////////////////
+////////////////////////////////////////////////////////////////
+
+void FiltersConfig::onKey(const char *key, JsonFileParser &parser) {
+  // STUB METHOD - TODO: Build this out
+  parser.skipValue();
+}
+
+////////////////////////////////////////////////////////////////
+// Class : ListenConfig  ///////////////////////////////////////
+////////////////////////////////////////////////////////////////
+
+void ListenConfig::onKey(const char *key, JsonFileParser &parser) {
+  if (STR_EQ(key, "clock")) {
+    parser.getBool(clock_);
+  } else if (STR_EQ(key, "sysex")) {
+    parser.getBool(sysex_);
+  } else if (STR_EQ(key, "activeSense")) {
+    parser.getBool(activeSense_);
+  } else {
+    parser.skipValue();
   }
 }
 
@@ -149,9 +184,25 @@ void ClockConfig::onKey(const char *key, dweedee::JsonFileParser &parser) {
     // pattern length, in sixteenth notes
     parser.getInt(patternLength_);
   } else if (STR_EQ(key, "tapEnabled")) {
+    // tap tempo
     parser.getBool(tapEnabled_);
   } else if (STR_EQ(key, "analog")) {
-    // analog.volume ?
+    // analog clock settings
+    parser.parse(analog_);
+  } else {
+    parser.skipValue();
+  }
+}
+
+////////////////////////////////////////////////////////////////
+// Class : AnalogClockConfig  //////////////////////////////////
+////////////////////////////////////////////////////////////////
+
+void AnalogClockConfig::onKey(const char *key, JsonFileParser &parser) {
+  if (STR_EQ(key, "analog")) {
+    parser.getInt(volume_);
+  } else {
+    parser.skipValue();
   }
 }
 
@@ -171,6 +222,8 @@ void SysexRecord::onKey(const char *key, dweedee::JsonFileParser &parser) {
   } else if (STR_EQ(key, "output")) {
     // Nickname of output device
     parser.getString(output_);
+  } else {
+    parser.skipValue();
   }
 }
 

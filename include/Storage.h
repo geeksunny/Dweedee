@@ -26,7 +26,7 @@ class JsonModel {
 
   friend class JsonFileParser;
 
-  virtual void onKey(const char *key, JsonFileParser &parceler) = 0;
+  virtual void onKey(const char *key, JsonFileParser &parser) = 0;
 //  virtual void serialize() = 0;
 
 };
@@ -56,6 +56,7 @@ class JsonFileParser {
   bool peekUntil(char until, bool escape = false);
   bool readUntil(char until, char *dest, bool escape = false);
   bool readMatches(const char *value, bool caseSensitive = true);
+  bool skipValue();
 
   // Included in header file due to compilation errors related to templating.
   template <typename T>

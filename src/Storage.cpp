@@ -1,5 +1,6 @@
 #include "Storage.h"
-#include <ctype.h>
+#include <cctype>
+#include <sstream>
 
 namespace dweedee {
 
@@ -85,11 +86,60 @@ bool JsonFileParser::findArray() {
 }
 
 bool JsonFileParser::getBool(bool &dest) {
-  // TODO: Look for characters (true/false/"true"/"false") OR digit (0/1)
-  return false;
+  int srcStartPos = src_.position();
+  bool isStr = false;
+  char next;
+  while (src_.available()) {
+    next = src_.peek();
+    switch (next) {
+      case 't':
+      case 'T':
+        dest = readMatches("true", false);
+        goto BOOL_END;
+      case 'f':
+      case 'F':
+        dest = readMatches("false", false);
+        goto BOOL_END;
+      case '0':
+        dest = false;
+        src_.read();
+        goto BOOL_END;
+      case '1':
+        dest = true;
+        src_.read();
+        goto BOOL_END;
+      case '"':
+        isStr = true;
+        break;
+      default:
+        if (!isspace(next) && next != ':') {
+          // Invalid character found before value encountered, error result.
+          src_.seek(srcStartPos);
+          return false;
+        }
+    }
+    src_.read();
+  }
+  BOOL_END:
+  if (isStr) {
+    if (src_.read() != '"') {
+      // Did not find the string closure, error result.
+      src_.seek(srcStartPos);
+      return false;
+    }
+  }
+  return true;
 }
 
 bool JsonFileParser::getHexString(int &dest) {
+  char *hexStr = nullptr;
+  if (getString(hexStr)) {
+    std::stringstream ss;
+    ss << std::hex << hexStr;
+    ss >> dest;
+    free(hexStr);
+    return true;
+  }
   return false;
 }
 
@@ -194,6 +244,25 @@ bool JsonFileParser::readUntil(char until, char *dest, bool escape) {
     dest[i] = src_.read();
   }
   dest[strLen] = '\0';
+  return true;
+}
+
+bool JsonFileParser::readMatches(const char *value, const bool caseSensitive) {
+  int srcStartPos = src_.position();
+  char srcNext, valueNext;
+  for (int i = 0; value[i] != '\0'; ++i) {
+    if (caseSensitive) {
+      srcNext = src_.read();
+      valueNext = value[i];
+    } else {
+      srcNext = tolower(src_.read());
+      valueNext = tolower(value[i]);
+    }
+    if (srcNext != valueNext) {
+      src_.seek(srcStartPos);
+      return false;
+    }
+  }
   return true;
 }
 

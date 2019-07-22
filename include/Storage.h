@@ -55,6 +55,7 @@ class JsonFileParser {
 
   bool peekUntil(char until, bool escape = false);
   bool readUntil(char until, char *dest, bool escape = false);
+  bool readMatches(const char *value, bool caseSensitive = true);
 
   // Included in header file due to compilation errors related to templating.
   template <typename T>

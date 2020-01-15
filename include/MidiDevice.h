@@ -56,7 +56,7 @@ class SerialMidiDevice : public MidiDevice {
   midi::MidiInterface<HardwareSerial> midi_;
 
  public:
-  SerialMidiDevice(HardwareSerial &serial);
+  explicit SerialMidiDevice(HardwareSerial &serial);
   MidiMessage *read(MidiReadHandler &handler) override;
   void write(MidiMessage *message) override;
 

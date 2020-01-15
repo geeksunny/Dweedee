@@ -23,7 +23,7 @@ class NamedRecord {
   char *name_;
 
  public:
-  NamedRecord(const char *name);
+  explicit NamedRecord(const char *name);
   ~NamedRecord();
 };
 
@@ -43,7 +43,7 @@ class DeviceRecord : public JsonModel, public NamedRecord<DeviceRecord> {
   void onKey(const char *key, JsonFileParser &parser) override;
 //  void serialize() override;
  public:
-  DeviceRecord(const char *name);
+  explicit DeviceRecord(const char *name);
   virtual ~DeviceRecord();
 
 };
@@ -86,7 +86,7 @@ class MappingRecord : public JsonModel, public NamedRecord<MappingRecord> {
 //  void serialize() override;
 
  public:
-  MappingRecord(const char *name);
+  explicit MappingRecord(const char *name);
   ~MappingRecord();
 
 };

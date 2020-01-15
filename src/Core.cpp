@@ -26,7 +26,7 @@ void Core::onDevicesAdded(UsbDeviceInfo **added, short count) {
       continue;
     }
     USBH_MIDI *midi = usbMgr->getUsbDevicePool()->getUsbMidi(added[i]->devAddress);
-    UsbMidiDevice *device = reinterpret_cast<UsbMidiDevice *>(findMidiDevice(added[i]->devAddress));
+    auto *device = reinterpret_cast<UsbMidiDevice *>(findMidiDevice(added[i]->devAddress));
     if (device != nullptr) {
       device->setDevice(midi);
       device->setEnabled(true);

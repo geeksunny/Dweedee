@@ -55,7 +55,7 @@ class InputMapping : MidiReadHandler {
   bool operator==(const MidiDevice *rhs) const;
   bool operator!=(const MidiDevice *rhs) const;
 
-  InputMapping(MidiDevice *inputDevice);
+  explicit InputMapping(MidiDevice *inputDevice);
   bool add(Mapping *mapping);
   bool remove(Mapping *mapping);
   bool isEmpty();

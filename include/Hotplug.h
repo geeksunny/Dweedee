@@ -27,7 +27,7 @@ class UsbDevicePool {
   bool requestUsbMidi(USB *Usb);
 
  public:
-  UsbDevicePool(USB *Usb);
+  explicit UsbDevicePool(USB *Usb);
   bool checkAllocation(USB *Usb);
   USBHub *getUsbHub(uint8_t devAddr);
   USBH_MIDI *getUsbMidi(uint8_t devAddr);
